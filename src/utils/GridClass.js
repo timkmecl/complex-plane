@@ -29,10 +29,14 @@ export default class Grid {
 	component3;
 	f;
 	type;
+
 	revision = 0;
+	a3dAxesInfo;
+	mode;
 
 	lines;
-	data = [];
+	data2d = [];
+	data3d = [];
 
 
 	constructor(type) {
@@ -64,16 +68,19 @@ export default class Grid {
 
 	redraw(mode) {
 		console.log(`Redrawing: ${mode}`);
+		//console.log(plt2d, plt3d);
 
-		if (mode ==='3d') {
-			let zRangeInfo = this.getZRangeInfo();
-			this.data = this.linesToData2d();
-			return [this.data, zRangeInfo];
+		if (mode ==='3d' && this.plt2d != undefined) {
+			this.data3d = this.linesToData3d();
+			this.get3dAxesInfo();
+			this.mode = mode;
+			return this.data;
 
-		} else if (this.mode === '2d') {
-			this.data = this.linesToData3d();
+		} else if (mode === '2d') {
+			this.data2d = this.linesToData2d();
+			this.mode = mode;
+			return this.data2d;
 		}
-		return this.data;
 	}
 
 	
@@ -172,29 +179,47 @@ export default class Grid {
 
 
 
-	getZRangeInfo() {
-		let zaxis_range = 0;
+	get3dAxesInfo() {
+		let rangeZ;
+		let rangeX = [-5, 5];
+		let rangeY = [-5, 5];
 		let aspectratio = 0;
-		let zaxis_title = getZAxisLabel(this.component3z);
-		if (this.plt3d.layout.scene.xaxis.range != undefined) {
-			let [rangeZ, aspectZ] = this.getZRange(this.plt3d.layout.scene.xaxis.range[1]-this.plt3d.layout.scene.xaxis.range[0]);
-			zaxis_range = rangeZ;
-			aspectratio = aspectZ;
+		let aspectmode = "cube";
+		let zaxis_title = getZAxisLabel(this.component3);
+		
+		if (this.plt2d.layout != undefined) {
+			let lengthX = Math.abs(this.plt2d.layout.xaxis.range[0] - this.plt2d.layout.xaxis.range[1])
+			let lengthY = Math.abs(this.plt2d.layout.yaxis.range[0] - this.plt2d.layout.yaxis.range[1])
+
+			if (lengthX > lengthY) {
+				let center = (this.plt2d.layout.yaxis.range[0] + this.plt2d.layout.yaxis.range[1]) / 2
+				rangeX = this.plt2d.layout.xaxis.range;
+				rangeY = [center - lengthX / 2, center + lengthX / 2]
+			} else {
+				let center = (this.plt2d.layout.xaxis.range[0] + this.plt2d.layout.xaxis.range[1]) / 2
+				rangeY = this.plt2d.layout.yaxis.range;
+				rangeX = [center - lengthY / 2, center + lengthY / 2]
+			}
+				
+			[rangeZ, aspectratio] = this.getZRange(lengthX);
+			aspectmode = "manual";
 		}
-		return {zaxis_range, aspectratio, zaxis_title};
+
+		this.a3dAxesInfo =  {rangeX, rangeY, rangeZ, aspectratio, aspectmode, zaxis_title};
+		console.log("ZrangeInfo")
 	}
 
 	getZRange(lengthXY) {
 		let info = this.lines[2];
 		let zMin = 0;
 		let zMax = 0;
-		if (this.component3z.zAxis === 're') {
+		if (this.component3.zAxis === 're') {
 			zMin = info.re.min;
 			zMax = info.re.max;
-		} else if (this.component3z.zAxis === 'im') {
+		} else if (this.component3.zAxis === 'im') {
 			zMin = info.im.min;
 			zMax = info.im.max;
-		} else if (this.component3z.zAxis === 'abs') {
+		} else if (this.component3.zAxis === 'abs') {
 			zMin = 0;
 			zMax = Math.sqrt(info.re.max*info.re.max + info.im.max*info.im.max);
 		}
