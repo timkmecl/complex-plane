@@ -11,24 +11,30 @@ const math = create(all, config_mjs);
 
 function App() {
   let [ftext, setFtext] = useState("sin(x)");
-  let [gridParams, setGridParams] = useState({
-    center: complex(0, 0), 
-    nh: 5, 
-    nv: 5, 
-    angle: 0,
-    space: 1, 
-    psPerSpace: 20,
-    color: {
-      v: 'rgba(70, 50, 140, 1)',
-      h: 'rgba(40, 130, 175, 1)'
-    }
-  });
+  let [gridParams, setGridParams] = useState([{
+      center: complex(0, 0),
+      nh: 5,
+      nv: 5,
+      angle: 0,
+      space: 1,
+      psPerSpace: 20,
+    },
+    {
+      color: {
+        v: 'rgba(70, 50, 140, 1)',
+        h: 'rgba(40, 130, 175, 1)'
+      },
+      component3: {
+        zAxis: 'auto',
+        color: 'auto'
+      }
+    }]);
   let [grid] = useState(
     new GridClass('cartesian')
   );
   let [revision, setRevision] = useState(0)
   let [mode, setMode] = useState('2d');
-  let [component3z, setComponent3z] = useState({zAxis: 're', color: true});
+  let [component3z, setComponent3z] = useState({zAxis: 're', color: 'auto'});
   
 
   useEffect(() => {
@@ -46,35 +52,21 @@ function App() {
   let fCompiled = math.compile(ftext);
   let f = x => fCompiled.evaluate({x})
 
-
-  let compColor = false;
-  if (component3z.color === true) {
-    if (component3z.zAxis === 're') {
-      compColor = 'im';
-    } else if (component3z.zAxis === 'im') {
-      compColor = 're';
-    } else if (component3z.zAxis === 'abs') {
-      compColor = 'arg';
-    }
-  } else if (component3z.color !== false) {
-    compColor = component3z.color;
-  }
-  let component3z2 = {...component3z, color: compColor};
   
 
   // Preračunavanje vseh točk
   useEffect(() => {
-    grid.refresh(gridParams, f, component3z2);
+    grid.refresh(gridParams, f, component3z);
     grid.recalculate()
     grid.redraw(mode);
     setRevision(revision+1);
-  }, [ftext, gridParams]);
+  }, [ftext, gridParams[0]]);
 
   useEffect(() => {
-    grid.refresh(gridParams, f, component3z2);
+    grid.refresh(gridParams, f, component3z);
     grid.redraw(mode);
     setRevision(revision+1);
-  }, [component3z.zAxis, component3z.color, mode]);
+  }, [component3z.zAxis, component3z.color, mode, gridParams[1]]);
 
 
   return (

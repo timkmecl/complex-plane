@@ -130,21 +130,7 @@ const Graf = ({grid, mode, revision}) => {
   let [plt2d, setPlt2d] = useState({
     data: [],
     layout: layoutInit2d,
-    config: configInit2d,/*{...configInit2d,
-      modeBarButtonsToAdd: [{
-        name: 'Reset view',
-        icon: Plotly.Icons.home,
-        click: () => {
-          console.log("clicka", plt2d, setPlt2d);
-          setPlt2d((plt2d) => {
-            console.log("click", plt2d);
-            let newLayout = plt2d.layout;
-            //newLayout.yaxis.range = [-5, 5];
-            newLayout.xaxis.range = [-5, 5];
-            return {...plt2d, revision:plt2d.revision+1, layout: newLayout}
-          })
-        }
-      }]},*/
+    config: configInit2d,
     uirevision: 1
   })
   let [plt3d, setPlt3d] = useState({
@@ -162,9 +148,6 @@ const Graf = ({grid, mode, revision}) => {
   }, []);
   
 
-
-  // Pretvorba med pogledi
-  //const prevMode = usePrevious(mode);
   useEffect(() => {
     console.log(grid.mode);
     if (grid.mode === '3d') {
@@ -173,7 +156,6 @@ const Graf = ({grid, mode, revision}) => {
         let   {rangeX, rangeY, rangeZ, aspectratio, aspectmode, zaxis_title} = grid.a3dAxesInfo;
         console.log(rangeZ, aspectratio, zaxis_title);
         let newLayout = plt3d.layout;
-        //let scene = newLayout.scene;
 
         newLayout.scene.xaxis.range = rangeX;
         newLayout.scene.yaxis.range = rangeY;
@@ -181,29 +163,6 @@ const Graf = ({grid, mode, revision}) => {
         newLayout.scene.zaxis.title = zaxis_title;
         newLayout.scene.aspectmode = aspectmode;
         newLayout.scene.aspectratio = aspectratio;
-        
-        /*newLayout.scene = {
-          ...newLayout.scene,
-          aspectmode: aspectmode,
-          aspectratio: aspectratio,
-          zaxis: {
-            range: rangeZ,
-            title: zaxis_title
-          }
-        }
-        console.log(newLayout.scene);*/
-
-        /*let layout3d = {
-          ...plt3d.layout,
-          uirevision: plt3d.layout.uirevision+1,
-          scene: {
-            ...layoutInit3d.scene,
-            xaxis:{title: 'Re(f(x))', range: xrange,},
-            yaxis:{title: 'Im(f(x))', range: yrange,},
-            zaxis:{title: getZAxisLabel(component3z)},
-          }
-        };*/
-        //let newData = linesToData('3d', lines, component3z);
         setPlt3d({...plt3d, layout:newLayout});
       }
     

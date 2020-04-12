@@ -49,9 +49,26 @@ export default class Grid {
 	}
 
 	refresh(params, f, component3) {
-		this.params = params;
+		this.params = {...params[0], ...params[1]};
 		this.f = f;
-		this.component3 = component3;
+
+		console.log(this.params);
+
+		if (this.params.component3.zAxis === 'auto'){
+			this.component3 = {...component3};
+		} else {
+			this.component3 = {...this.params.component3};
+		}
+
+		if (this.component3.color === 'auto') {
+			if (this.component3.zAxis === 're') {
+				this.component3.color = 'im';
+			} else if (this.component3.zAxis === 'im') {
+				this.component3.color = 're';
+			} else if (this.component3.zAxis === 'abs') {
+				this.component3.color = 'arg';
+			}
+		}
 
 		this.revision++;
 	}
@@ -142,7 +159,7 @@ export default class Grid {
 		}
 	
 		let line1 = {};
-		if (this.component3.color !== false){
+		if (this.component3.color !== 'set'){
 			let cmin = 0;
 			let cmax = 0;
 			if (this.component3.color === 'im') {
