@@ -5,6 +5,7 @@ import Plotly from 'plotly.js';
 import Plot from "react-plotly.js";
 import { create, all } from 'mathjs'
 import { calculateGrid } from '../utils/grid';
+import GridClass  from '../utils/GridClass';
 
 const config_mjs = { };
 const math = create(all, config_mjs);
@@ -163,7 +164,7 @@ const Graf = ({f, grid, mode, component3z}) => {
   // Preračunavanje vseh točk
   useEffect(() => {
     console.log("Recalculating");
-    let lines1 = calculateGrid(grid.center, grid.nh, grid.nv, grid.angle, grid.space, grid.psPerSpace/5, 
+    let lines1 = calculateGrid(grid.center, grid.nh, grid.nv, grid.angle, grid.space, grid.psPerSpace, 
       f);
     redraw(lines1, plt2d, setPlt2d, plt3d, setPlt3d, mode, component3z);
     setLines(lines1);

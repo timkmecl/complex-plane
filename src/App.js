@@ -3,6 +3,8 @@ import './App.css';
 import Graf from './components/Graf.jsx';
 import {complex} from 'mathjs';
 
+import GridClass  from './utils/GridClass';
+
 import { create, all } from 'mathjs'
 const config_mjs = { };
 const math = create(all, config_mjs);
@@ -15,7 +17,7 @@ function App() {
     nv: 5, 
     angle: 0,
     space: 1, 
-    psPerSpace: 100
+    psPerSpace: 20
   });
   let [mode, setMode] = useState('2d');
   let [component3z, setComponent3z] = useState({zAxis: 're', color: true});
