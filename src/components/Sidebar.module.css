@@ -1,0 +1,299 @@
+
+
+
+.sidebar {
+	box-shadow: inset 3px 0px 7px rgba(0, 0, 0, 0.01);
+	border-left: 1px solid rgb(227, 227, 227);
+
+	color: rgb(102, 102, 102);
+	color: rgb(23, 23, 23);
+	background-color: rgb(253, 253, 253);
+}
+
+
+
+.menu {
+	text-align: center;
+	padding: 0.3rem 0.5rem 0;
+	font-size: 1.5rem;
+	line-height: 3.3rem;
+	width: 100%;
+	min-width: 19.18rem;
+
+	/*border-bottom: 1px solid rgb(232, 232, 232);*/
+	box-shadow: 0 2px 5px rgba(0,0,0,0.13), 0 2px 5px rgba(0,0,0,0.23);
+	background: #00a08f;
+
+	margin-bottom: 0.5rem;
+}
+
+.menuContainer {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+
+	margin: 0 auto;
+	width: fit-content;
+}
+
+.menuItem {
+	padding: 0 1em;
+	color: #fff;
+	opacity: 0.5;
+	cursor: pointer;
+}
+
+.menuItem:hover {
+	opacity: 0.75;
+}
+
+.menuItemSelected {
+	opacity:1 !important;
+}
+
+
+
+
+.content {
+	font-size: 1rem;
+	padding: 0.5rem;
+}
+
+.inivisible {
+	display: none !important;
+}
+
+
+
+/*     View options     */
+
+
+
+.dimensionsSelector {
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	column-gap: 3rem;
+	
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+
+	margin: 0.8rem auto 2rem;
+	width: fit-content;
+
+	padding: 0 0.5rem;
+	font-size: 3rem;
+	line-height: 3.3rem;
+}
+
+.dimensionsSelectorItem {
+	opacity: 0.5;
+	color: rgb(102, 102, 102);
+}
+.dimensionsSelectorItem:hover {
+	opacity: 0.75;
+}
+
+.dimensionsSelectorItemSelected {
+	opacity: 1 !important;
+}
+
+
+.viewOptions {
+	margin-top: 1rem;
+}
+
+.formGroup {
+	width: 100%;
+	font-size:0.9rem;
+	margin: 0.5rem 0;
+	
+	display:grid;
+	grid-template-columns: 1fr 1.3fr;
+	align-items: center;
+	justify-content: center;
+	column-gap: 0.5rem;
+	padding: 0 0.5rem;
+}
+
+select {
+	box-shadow: none!important;
+
+	border-radius: 2px;
+	color: inherit;
+
+	padding: 0.15rem 0.15rem;
+	width:100%;
+	text-align: left;
+
+	
+	background-color: rgba(246, 246, 246, 0.5);
+	border: none;
+	border-left: 3px solid #00bdaa;
+}
+
+select:focus {
+	background-color: rgba(246, 246, 246, 1);
+	border: none;
+	border-left: 2px solid #00bdaa;
+}
+
+label {
+	text-align: right;
+	padding-right: 0.5rem;
+}
+
+
+/*     Functions list     */
+
+
+
+.functionListItem {
+	width: 100%;
+	margin: 0.5rem 0;
+	
+	display:grid;
+	grid-template-columns: 1fr;
+	align-items: center;
+	justify-content: center;
+	column-gap: 0.5rem;
+	padding: 0 0.5rem;
+
+	font-size:1rem;
+	margin: 0.5rem 0;
+}
+
+.functionListItem input {
+	text-align: center;
+
+	padding: 0.4rem 0.25rem;
+	padding-left: 1rem;
+}
+
+
+input {
+	border-radius: 2px;
+	width: 100%;
+	background-color: rgba(246, 246, 246, 0.5);
+	padding: 0 0.15rem;
+	
+	color: inherit;
+	font-size: inherit;
+	text-align: left;
+	border:none;
+	border-left: 3px solid #00bdaa;
+	border-bottom: 2px solid transparent;
+}
+
+input:focus {
+	outline: none !important;
+	background-color: rgb(246, 246, 246);
+	color: #17176b;
+	border:none;
+	border-bottom: 2px solid #00bdaa;
+}
+
+.functionListItemNew input {
+	background-color: rgba(246, 246, 246, 0.5);
+	border-left: none;
+	border-bottom: 1px solid #00bdaa;
+	border-left: 3px solid #00bdaa;
+	font-style: italic;
+}
+.functionListItemNew input::placeholder, 
+.functionListItemNew input::-ms-input-placeholder {
+	color: rgb(102, 102, 102);
+	opacity: 0.3;
+}
+
+.functionListItemError input {
+	color: rgb(255, 0, 0);
+	border-left: 3px solid rgb(255, 145, 0);
+	opacity: 0.5;
+	font-style: italic;
+	text-decoration: line-through;
+}
+.functionListItemError input:focus {
+	text-decoration: none;
+}
+
+.functionListItemInactive input {
+	opacity: 0.5;
+	font-style: italic;
+	color: rgba(23, 23, 23);
+}
+
+
+/*     Grid list     */
+
+
+.gridList input {
+	border-left: none;
+	font-size: inherit;
+	padding: 0.15rem 0.3rem 0.15rem;
+	font-size: 0.9rem;
+	border-bottom: 1px solid #00bdaa;
+}
+
+.gridList input:focus {
+	border-bottom: none;
+}
+.gridList label {
+	padding-bottom: 0.12rem;
+}
+
+.gridList .formGroup {
+	line-height: 1.5rem;
+	grid-template-columns: 5rem 1fr;
+}
+
+.gridList .formGroupWide {
+	grid-template-columns: 5rem 1fr 1rem 1fr;
+}
+
+
+.gridTypeSelector {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	column-gap: 1.8rem;
+	
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+
+	margin: 0.8rem 20% 0.8rem auto;
+	width: fit-content;
+
+	padding: 0 0.5rem;
+	font-size: 1.2rem;
+}
+
+.gridTypeSelectorItem {
+	opacity: 0.5;
+	color: rgb(102, 102, 102);
+}
+.gridTypeSelectorItem:hover {
+	opacity: 0.75;
+}
+
+.gridTypeSelectorItemSelected {
+	opacity: 1 !important;
+}
+
+.flippedIcon {
+	transform: scaleX(-1);
+	-moz-transform: scaleX(-1);
+	-webkit-transform: scaleX(-1);
+	-ms-transform: scaleX(-1);
+}
+
+
+.grid {
+	padding: 0.1rem 0;
+	margin-bottom: 1.5rem;
+	border: 1px solid  rgba(246, 246, 246);
+	border-left: 3px solid #00bdaa;
+	border-radius: 5px;
+}

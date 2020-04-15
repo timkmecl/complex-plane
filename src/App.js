@@ -1,126 +1,119 @@
-import React , { useState, useEffect } from 'react';
-import './App.css';
+import React, { useState, useEffect } from 'react';
+import styles from './App.module.css';
+
+import { complex } from 'mathjs';
+import { m } from './utils/math';
+import GridClass from './utils/GridClass';
+
 import Graf from './components/Graf.jsx';
-import {complex} from 'mathjs';
+import Sidebar from './components/Sidebar.jsx'
 
-import GridClass  from './utils/GridClass';
 
-import { create, all } from 'mathjs'
-const config_mjs = { };
-const math = create(all, config_mjs);
+const scopeInit = {};
+m.evaluate("f(x) = sin(x)", scopeInit);
+
 
 function App() {
-  let [ftext, setFtext] = useState("sin(x)");
-  let [gridParams, setGridParams] = useState([{
-      center: complex(0, 0),
-      nh: 5,
-      nv: 5,
-      angle: 0,
-      space: 1,
-      psPerSpace: 20,
-    },
-    {
-      color: {
-        v: 'rgba(70, 50, 140, 1)',
-        h: 'rgba(40, 130, 175, 1)'
+  let [fList, setFList] = useState({ list: [{ text: "f(x) = sin(x)", id: 0, name: 'f' }], idNew: 1 });
+  let [scope, setScope] = useState(scopeInit);
+  
+  let [gridParams, setGridParams] = useState({
+    grids: [[
+      {
+        gridType: 'cartesian',
+        funct: 'f(x)',
+        center: complex(0, 0),
+        angle: 0,
+        psPerLine: 200,
+
+        width: 10,
+        height: '=',
+        nLinesV: 11,
+        nLinesH: '=',
       },
-      component3: {
-        zAxis: 'auto',
-        color: 'auto'
-      }
-    }]);
+      {
+        color: {
+          v: 'rgba(70, 50, 140, 1)',
+          h: 'rgba(40, 130, 175, 1)',
+          opacity: 1,
+          width: 2,
+        },
+        component3: {
+          zAxis: 'auto',
+          color: 'auto'
+        }
+      }, 0, 0, []],],
+
+    nextId: 1,
+    revision: 0,
+    component3: { zAxis: 're', color: 'auto' }
+  });
   let [grid] = useState(
-    new GridClass('cartesian')
+    new GridClass()
   );
-  let [revision, setRevision] = useState(0)
+
   let [mode, setMode] = useState('2d');
-  let [component3z, setComponent3z] = useState({zAxis: 're', color: 'auto'});
+  let [component3, setComponent3] = useState({ zAxis: 're', color: 'auto' });
+
+  let [revision, setRevision] = useState(0)
+
+  //m.evaluate(fList.list[0].text, scope)
   
 
-  useEffect(() => {
-    math.import({
-      Sum: bigSigma,
-      S: bigSigma,
-      sigma: bigSigma,
-      Sigma: bigSigma,
-      Product: bigPi,
-      product: bigPi,
-      P: bigPi,
-    })
-  }, [])
-
-  let fCompiled = math.compile(ftext);
-  let f = x => fCompiled.evaluate({x})
-
-  
 
   // Preračunavanje vseh točk
   useEffect(() => {
-    grid.refresh(gridParams, f, component3z);
+    console.log("aaa", scope)
+    grid.refresh(gridParams.grids[0], {...scope}, component3);
     grid.recalculate()
     grid.redraw(mode);
-    setRevision(revision+1);
-  }, [ftext, gridParams[0]]);
+    setRevision(revision + 1);
+  }, [gridParams]);
 
-  useEffect(() => {
-    grid.refresh(gridParams, f, component3z);
-    grid.redraw(mode);
-    setRevision(revision+1);
-  }, [component3z.zAxis, component3z.color, mode, gridParams[1]]);
+
+
+  function onInput(action, content) {
+    switch (action) {
+      case '2d3d':
+        if (content == '2d') {
+          grid.redraw('2d');
+          setMode('2d')
+        } else if (content == '3d') {
+          grid.redraw('3d');
+          setMode('3d')
+        }
+        break;
+
+      case 'component3':
+        console.log(content);
+        let newComp3 = { ...component3 };
+        newComp3[content.which] = content.option;
+        setComponent3(newComp3);
+
+        grid.refresh(gridParams.grids[0], {...scope}, newComp3);
+        grid.redraw(mode);
+        break;
+
+      case 'functionChanged':
+        setFList(content.list);
+        console.log("App", m.evaluate("f(1)", {...scope}));
+
+        grid.refresh(gridParams.grids[0], scope, component3);
+        grid.recalculate()
+        grid.redraw(mode);
+    }
+
+    setRevision(revision + 1);
+  }
+
 
 
   return (
-    <Graf grid={grid} mode={mode} revision={revision} />
+    <div className={styles.App}>
+      <Graf grid={grid} mode={mode} revision={revision} />
+      <Sidebar onInput={onInput} config={{mode, gridParams, component3, fList, scope }} />
+    </div>
   );
 }
 
 export default App;
-
-
-
-
-
-
-
-
-
-function bigSigma(args, math, scope) {
-  const str = args.map(function (arg) {
-    return arg.toString()
-  })
-  let [ind, a, b, expr] = str;
-
-  let s = 0;
-  let exprCompiled = math.compile(expr);
-
-  a = math.number(math.evaluate(a, scope));
-  b = math.number(math.evaluate(b, scope));
-  
-  for(let i = a; i <= b; i++) {
-    let plus = exprCompiled.evaluate({...scope, [ind]: i});
-    s = math.add(s, plus);
-  }
-  return s;
-}
-bigSigma.rawArgs = true;
-
-function bigPi(args, math, scope) {
-  const str = args.map(function (arg) {
-    return arg.toString()
-  })
-  let [ind, a, b, expr] = str;
-
-  let p = 1;
-  let exprCompiled = math.compile(expr);
-
-  a = math.number(math.evaluate(a, scope));
-  b = math.number(math.evaluate(b, scope));
-  
-  for(let i = a; i <= b; i++) {
-    let plus = exprCompiled.evaluate({...scope, [ind]: i});
-    p = math.multiply(p, plus);
-  }
-  return p;
-}
-bigPi.rawArgs = true;
-//"Sum(n, 0, 3, Sum(j, 0, 5, j)) "

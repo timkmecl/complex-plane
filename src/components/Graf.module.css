@@ -1,0 +1,11 @@
+
+.Graf {
+	height: 100vh;
+	width: 100%;
+}
+
+@media (max-width: 65rem) and (orientation: portrait), (max-width: 40rem) {
+  .Graf {
+    height: 60vh;
+  }
+}

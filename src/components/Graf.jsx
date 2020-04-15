@@ -1,25 +1,13 @@
 
-import React, {useState, useEffect, useRef} from "react";
+import React, {useState, useEffect} from "react";
 
-//import Plotly from 'plotly.js';
+import styles from "./Graf.module.css";
+
 import Plot from "react-plotly.js";
-import { create, all } from 'mathjs'
-
-const config_mjs = { };
-const math = create(all, config_mjs);
 /*
 import Plotly from "plotly.js-basic-dist";
-
 import createPlotlyComponent from "react-plotly.js/factory";
 const Plot = createPlotlyComponent(Plotly);*/
-
-function usePrevious(value) {
-  const ref = useRef();
-  useEffect(() => {
-    ref.current = value;
-  });
-  return ref.current;
-}
 
 
 
@@ -35,21 +23,30 @@ const layoutInit2d = {
   margin: {
     l: 45,
     r: 0,
-    b: 30,
+    b: 23,
     t: 0,
     pad: 4
   },
   xaxis: {
-    nticks: 10,
-    range: [-5, 5]
+    range: [-5, 5],
+    tickfont: {
+      color: "#666"
+    },
+    zerolinecolor: "#555",
   },
   yaxis: {
     scaleanchor: "x",
     range: [-5, 5],
+    ticksuffix:"i",
+    tickfont: {
+      color: "#666"
+    },
+    zerolinecolor: "#555",
   },
+  
 }
 
-const configInit2d={
+const configInit={
   responsive: true,
   scrollZoom: true,
   displayModeBar: true,
@@ -57,16 +54,14 @@ const configInit2d={
   modeBarButtonsToRemove: [
     'lasso2d', 'toggleSpikelines', 'hoverCompareCartesian', 'hoverClosestCartesian', 'resetCameraLastSave3d'
   ],
+  toImageButtonOptions: {
+    format: 'png',
+    filename: 'ComplexF',
+    height: 720,
+    width: 720,
+    scale: 3
+  }
 };
-
-const dataObjInit2d = {
-  name: "",
-  line: {
-    color: "rgba(35, 110, 160, 0.8)"
-  },
-  mode: 'lines',
-  type: 'scattergl'
-}
 
 // za 3d
 const layoutInit3d = {
@@ -106,37 +101,18 @@ const layoutInit3d = {
   }
 }
 
-const dataObjInit3d = {
-  name: "",
-  line: {
-    //color: "rgba(35, 110, 160, 0.8)"
-  },
-  mode: 'lines',
-  type: 'scatter3d'
-}
-
-
-
-
-
-
-
-
-
-
-
 const Graf = ({grid, mode, revision}) => {
 
   let [plt2d, setPlt2d] = useState({
     data: [],
     layout: layoutInit2d,
-    config: configInit2d,
+    config: configInit,
     uirevision: 1
   })
   let [plt3d, setPlt3d] = useState({
     data: [],
     layout: layoutInit3d,
-    config: configInit2d,
+    config: configInit,
     uirevision: 1
   })
 
@@ -151,10 +127,7 @@ const Graf = ({grid, mode, revision}) => {
   useEffect(() => {
     console.log(grid.mode);
     if (grid.mode === '3d') {
-       
-        
         let   {rangeX, rangeY, rangeZ, aspectratio, aspectmode, zaxis_title} = grid.a3dAxesInfo;
-        console.log(rangeZ, aspectratio, zaxis_title);
         let newLayout = plt3d.layout;
 
         newLayout.scene.xaxis.range = rangeX;
@@ -176,7 +149,6 @@ const Graf = ({grid, mode, revision}) => {
   }, [grid.data3d]);
 
 
-
   const update2d = (figure) => {
     setPlt2d({config:plt2d.config, ...figure});
   };
@@ -184,31 +156,32 @@ const Graf = ({grid, mode, revision}) => {
     setPlt3d({config:plt3d.config, ...figure});
   };
 
-  console.log(revision)
-  if (mode === '3d'){
-    return (
-      <Plot key={3}
-        style={{width: '100%', height: '100%'}}
-        data={plt3d.data}
-        layout={plt3d.layout}
-        config={plt3d.config}
-        useResizeHandler={true}
-        onInitialized={update3d}
-        onUpdate={update3d}
-      />)
-  } else {
-    return (
-      <Plot key={2}
-        style={{width: '100%', height: '100%'}}
-        data={plt2d.data}
-        layout={plt2d.layout}
-        config={plt2d.config}
-        useResizeHandler={true}
-        revision={revision}
-        onInitialized={update2d}
-        onUpdate={update2d}
-      />)
-  }
+
+  return (
+    <div className={styles.Graf}>{
+        (mode === '3d') ?
+          <Plot key={3}
+            style={{ width: '100%', height: '100%' }}
+            data={plt3d.data}
+            layout={plt3d.layout}
+            config={plt3d.config}
+            useResizeHandler={true}
+            onInitialized={update3d}
+            onUpdate={update3d}
+          /> 
+          :
+          <Plot key={2}
+            style={{ width: '100%', height: '100%' }}
+            data={plt2d.data}
+            layout={plt2d.layout}
+            config={plt2d.config}
+            useResizeHandler={true}
+            revision={revision}
+            onInitialized={update2d}
+            onUpdate={update2d}
+          />
+      }</div>
+  )
 }
 
 export default Graf

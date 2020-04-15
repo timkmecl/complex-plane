@@ -1,34 +1,39 @@
-import { calculateGrid } from '../utils/grid';
+import { calculateGrid, calculateGridPolar } from './grid';
 
-import { create, all, complex, add, subtract, multiply, exp } from 'mathjs';
+import { m } from '../utils/math';
+import { create, all } from 'mathjs';
 const config_mjs = {};
 const math = create(all, config_mjs);
 
 
-const dataObjInit2d = {
-	name: "",
-	line: {
-		color: "rgba(35, 110, 160, 0.8)"
-	},
-	mode: 'lines',
-	type: 'scattergl'
-}
-const dataObjInit3d = {
-	name: "",
-	line: {
-		color: "rgba(35, 110, 160, 0.8)"
-	},
-	mode: 'lines',
-	type: 'scatter3d'
-}
+
 
 export default class Grid {
+
+	dataObjInit2d = {
+		name: "",
+		line: {
+			color: "rgba(35, 110, 160, 0.8)"
+		},
+		mode: 'lines',
+		type: 'scatter'
+	}
+	dataObjInit3d = {
+		name: "",
+		line: {
+			color: "rgba(35, 110, 160, 0.8)"
+		},
+		mode: 'lines',
+		type: 'scatter3d'
+	}
+
+
 
 	plt2d; plt3d;
 	params = {center: 0, nh:0, nv:0, angle:0, space:0, psPerSpace:0, color:true};
 	component3;
 	f;
-	type;
+	id;
 
 	revision = 0;
 	a3dAxesInfo;
@@ -38,21 +43,18 @@ export default class Grid {
 	data2d = [];
 	data3d = [];
 
-
-	constructor(type) {
-		this.type = type;
-	}
-
 	setPlot(plt2d, plt3d) {
 		this.plt2d = plt2d;
 		this.plt3d = plt3d;
 	}
 
-	refresh(params, f, component3) {
+	refresh(params, scope, component3) {
 		this.params = {...params[0], ...params[1]};
-		this.f = f;
+		this.id = params[2];
 
-		console.log(this.params);
+		let fCompiled = m.compile(this.params.funct);
+  	this.f = x => fCompiled.evaluate({ x, ...scope })
+
 
 		if (this.params.component3.zAxis === 'auto'){
 			this.component3 = {...component3};
@@ -67,6 +69,8 @@ export default class Grid {
 				this.component3.color = 're';
 			} else if (this.component3.zAxis === 'abs') {
 				this.component3.color = 'arg';
+			} else if (this.component3.zAxis === 'arg') {
+				this.component3.color = 'abs';
 			}
 		}
 
@@ -76,10 +80,12 @@ export default class Grid {
 
 	recalculate() {
 		console.log("Recalculating");
-		if (this.type === 'cartesian') {
-			this.lines = calculateGrid(this.params.center, this.params.nh, this.params.nv, this.params.angle, this.params.space, this.params.psPerSpace, this.f);
-		} else if (this.type === 'polar') {
-
+		let height = this.params.height === '=' ? this.params.width : this.params.height;
+		let nLinesH = this.params.nLinesH === '=' ? this.params.nLinesV : this.params.nLinesH;
+		if (this.params.gridType === 'cartesian') {
+			this.lines = calculateGrid(this.params.center, this.params.width, height, this.params.angle, this.params.nLinesV, nLinesH, this.params.psPerLine, this.f);
+		} else if (this.params.gridType === 'polar') {
+			this.lines = calculateGridPolar(this.params.center, this.params.width, height, this.params.angle, this.params.nLinesV, nLinesH, this.params.psPerLine, this.f);
 		}
 	}
 
@@ -91,7 +97,7 @@ export default class Grid {
 			this.data3d = this.linesToData3d();
 			this.get3dAxesInfo();
 			this.mode = mode;
-			return this.data;
+			return this.data3d;
 
 		} else if (mode === '2d') {
 			this.data2d = this.linesToData2d();
@@ -119,10 +125,11 @@ export default class Grid {
 		let text = xx.map((e, i) => `f( ${math.format(e, 2)} )<br><i>${math.format(yy[i], 2)}</i>`);
 	
 		data.push({
-			...dataObjInit2d, name, x, y, hovertemplate: text,
+			...this.dataObjInit2d, name, x, y, hovertemplate: text,
+			opacity: this.params.color.opacity,
 			line: {
 				color: color,
-				width: 2
+				width: this.params.color.width
 			},
 		});
 	}
@@ -150,16 +157,22 @@ export default class Grid {
 		let z = 0;
 		let c = 0;
 		
+		let isZDefined = true;
 		if (this.component3.zAxis === 'im') {
 			z = xx.map((e) => e.im);
 		} else if (this.component3.zAxis === 're'){
 			z = xx.map((e) => e.re);
 		} else if (this.component3.zAxis === 'abs'){
 			z = xx.map((e) => math.abs(e));
+		} else if (this.component3.zAxis === 'arg'){
+			z = xx.map((e) => math.arg(e));
+		} else {
+			z = xx.map((e) => 0);
+			isZDefined = false;
 		}
 	
 		let line1 = {};
-		if (this.component3.color !== 'set'){
+		if (this.component3.color !== 'none' && isZDefined == true){
 			let cmin = 0;
 			let cmax = 0;
 			if (this.component3.color === 'im') {
@@ -174,22 +187,27 @@ export default class Grid {
 				c = xx.map((e) => math.arg(e));
 				cmin = -3.141593;
 				cmax = 3.141593;
-			} 
+			} else if (this.component3.color === 'abs'){
+				c = xx.map((e) => math.abs(e));
+				cmin = info.abs.min;
+				cmax = info.abs.max;
+			}
 	
 			line1 = {
-				width: 4,
+				width: this.params.color.width*2,
 				color: c,
 				colorscale: 'Viridis',
-				cmin, cmax};
+				cmin, cmax}
 		} else {
 			line1= {
 				color: color,
-				width: 4
+				width: this.params.color.width*2
 			};
 		}
 	
 		data.push({
-			...dataObjInit3d, name, x, y, z, hovertemplate: text,
+			...this.dataObjInit3d, name, x, y, z, hovertemplate: text,
+			opacity: this.params.color.opacity,
 			line: line1
 		});
 	}
@@ -218,7 +236,7 @@ export default class Grid {
 				rangeX = [center - lengthY / 2, center + lengthY / 2]
 			}
 				
-			[rangeZ, aspectratio] = this.getZRange(lengthX);
+			[rangeZ, aspectratio] = this.getZRange(Math.max(lengthX, lengthY));
 			aspectmode = "manual";
 		}
 
@@ -239,7 +257,15 @@ export default class Grid {
 		} else if (this.component3.zAxis === 'abs') {
 			zMin = 0;
 			zMax = Math.sqrt(info.re.max*info.re.max + info.im.max*info.im.max);
+		} else if (this.component3.zAxis === 'arg') {
+			zMin = -3.141593;
+			zMax = 3.141593;
 		}
+
+		if (zMin-zMax == 0){
+			zMax = 0.001;
+		}
+
 		let lengthZ = zMax - zMin;
 		let rangeZ = [zMin, zMax];
 		let aspect = {x:1, y:1, z:lengthZ / lengthXY};
@@ -256,7 +282,9 @@ function getZAxisLabel(component3z) {
 		return 'Im(x)';
 	} else if( component3z.zAxis === 're') {        
 		return 'Re(x)';
-	}else if( component3z.zAxis === 're') {        
+	} else if( component3z.zAxis === 'abs') {        
 		return 'abs(x)';
+	} else if( component3z.zAxis === 'arg') {        
+		return 'arg(x)';
 	}
 }
