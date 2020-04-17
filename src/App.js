@@ -4,6 +4,7 @@ import styles from './App.module.css';
 import { complex } from 'mathjs';
 import { m } from './utils/math';
 import GridClass from './utils/GridClass';
+import Scene from './utils/Scene';
 
 import Graf from './components/Graf.jsx';
 import Sidebar from './components/Sidebar.jsx'
@@ -12,21 +13,57 @@ import Sidebar from './components/Sidebar.jsx'
 const scopeInit = {};
 m.evaluate("f(x) = sin(x)", scopeInit);
 
+const newGridTemplate = [
+  {
+    active: true,
+    gridType: 'cartesian',
+
+    funct: '',
+    center: "0 + 0i",
+    angle: 0,
+    psPerLine: 200,
+
+    width: "4",
+    height: '=',
+    nLinesV: 5,
+    nLinesH: '=',
+  },
+  {
+    color: {
+      v: 'rgba(70, 50, 140, 1)',
+      h: 'rgba(40, 130, 175, 1)',
+      opacity: 1,
+      width: 2,
+      r: 70,
+      g: 50,
+      b: 140,
+    },
+    component3: {
+      zAxis: 'auto',
+      color: 'auto'
+    }
+  }
+]
+
 
 function App() {
+  // Seznam vseh funkcij (v text obliki, dejanske funkcije shranjene v scope)
   let [fList, setFList] = useState({ list: [{ text: "f(x) = sin(x)", id: 0, name: 'f' }], idNew: 1 });
-  let [scope, setScope] = useState(scopeInit);
-  
+  let [scope] = useState(scopeInit);
+
+  // Seznam vseh parametrov mrež
   let [gridParams, setGridParams] = useState({
     grids: [[
       {
+        active: true,
         gridType: 'cartesian',
+
         funct: 'f(x)',
-        center: complex(0, 0),
+        center: "0",
         angle: 0,
         psPerLine: 200,
 
-        width: 10,
+        width: "5",
         height: '=',
         nLinesV: 11,
         nLinesH: '=',
@@ -37,70 +74,160 @@ function App() {
           h: 'rgba(40, 130, 175, 1)',
           opacity: 1,
           width: 2,
+          r: 70,
+          g: 50,
+          b: 140,
         },
         component3: {
           zAxis: 'auto',
-          color: 'auto'
+          color: 'auto',
         }
-      }, 0, 0, []],],
+      }, 0, 0, []],
+    ],
 
     nextId: 1,
     revision: 0,
     component3: { zAxis: 're', color: 'auto' }
   });
-  let [grid] = useState(
-    new GridClass()
+  // Scene object (dejanske mreže, skrbi za računanje točk)
+  let [scene] = useState(
+    new Scene()
   );
 
   let [mode, setMode] = useState('2d');
-  let [component3, setComponent3] = useState({ zAxis: 're', color: 'auto' });
+  let [component3, setComponent3] = useState({ zAxis: 're', color: 'auto', hybrid: true, });
 
   let [revision, setRevision] = useState(0)
+  let [rev2] = useState(0)
 
-  //m.evaluate(fList.list[0].text, scope)
-  
+
 
 
   // Preračunavanje vseh točk
   useEffect(() => {
-    console.log("aaa", scope)
-    grid.refresh(gridParams.grids[0], {...scope}, component3);
-    grid.recalculate()
-    grid.redraw(mode);
+    scene.refresh(gridParams, { ...scope }, component3);
+    scene.recalculate()
+    scene.redraw(mode);
     setRevision(revision + 1);
-  }, [gridParams]);
+  }, [rev2]);
 
 
 
   function onInput(action, content) {
     switch (action) {
-      case '2d3d':
+      case '2d3d': {
         if (content == '2d') {
-          grid.redraw('2d');
+          scene.redraw('2d');
           setMode('2d')
         } else if (content == '3d') {
-          grid.redraw('3d');
+          scene.redraw('3d');
           setMode('3d')
         }
+       
         break;
+      }
 
-      case 'component3':
-        console.log(content);
+      case 'component3': {
         let newComp3 = { ...component3 };
         newComp3[content.which] = content.option;
         setComponent3(newComp3);
 
-        grid.refresh(gridParams.grids[0], {...scope}, newComp3);
-        grid.redraw(mode);
+        scene.refresh(gridParams, { ...scope }, newComp3);
+        scene.redraw(mode);
+       
         break;
+      }
 
-      case 'functionChanged':
+      case 'functionChanged': {
         setFList(content.list);
-        console.log("App", m.evaluate("f(1)", {...scope}));
 
-        grid.refresh(gridParams.grids[0], scope, component3);
-        grid.recalculate()
-        grid.redraw(mode);
+        scene.refresh(gridParams, { ...scope }, component3);
+        scene.recalculate()
+        scene.redraw(mode);
+       
+        break;
+      }
+
+      case 'gridParamChanged': { 
+        let index = gridParams.grids.findIndex(g => g[2] == content.id);
+        gridParams.grids[index][0][content.name] = content.value;
+        setGridParams(gridParams);
+
+       break;
+      }
+
+      case 'gridParamChangedCommit': {
+        scene.refresh(gridParams, { ...scope }, component3);
+        scene.recalculateSpecific(content.id);
+        scene.redraw(mode);
+       
+        break;
+      }
+
+
+      case 'gridNew': {
+        let newId = gridParams.nextId;
+        let newGrid = [{ ...newGridTemplate[0] }, { ...newGridTemplate[1] }, newId, 0, []];
+        gridParams.nextId++;
+        gridParams.grids = [newGrid, ...gridParams.grids];
+        setGridParams(gridParams);
+        scene.refresh(gridParams, { ...scope }, component3);
+        scene.recalculateSpecific(newId);
+        scene.redraw(mode);
+       
+        break;
+      }
+
+      case 'gridToggleVisible': {
+        let index = gridParams.grids.findIndex(g => g[2] == content.id);
+        gridParams.grids[index][0].active = !gridParams.grids[index][0].active;
+        setGridParams(gridParams);
+        scene.refresh(gridParams, { ...scope }, component3);
+        scene.recalculateSpecific(content.id);
+        scene.redraw(mode);
+       
+        break;
+      }
+      case 'gridChangeColor': {
+        let index = gridParams.grids.findIndex(g => g[2] == content.id);
+        gridParams.grids[index][1].color = {...gridParams.grids[index][1].color,
+          ...content.color};
+        setGridParams(gridParams);
+        scene.refresh(gridParams, { ...scope }, component3);
+        scene.redraw(mode);
+       
+        break;
+      }
+      case 'gridDelete': {
+        gridParams.grids = gridParams.grids.filter(g => g[2]!= content.id);
+        setGridParams(gridParams);
+        scene.delete(content.id);
+        scene.refresh(gridParams, { ...scope }, component3);
+        scene.redraw(mode);
+       
+        break;
+      }
+      case 'gridCopy': {
+        let index = gridParams.grids.findIndex(g => g[2] == content.id);
+
+        let newId = gridParams.nextId;
+        let newGrid = [{ ...gridParams.grids[index][0] }, { ...gridParams.grids[index][1] }, newId, gridParams.grids[index][3], []];
+        gridParams.nextId++;
+        gridParams.grids = [
+          ...gridParams.grids.slice(0, index),
+          newGrid,
+          ...gridParams.grids.slice(index)
+        ];
+        console.log(newId, index, gridParams.grids);
+        setGridParams(gridParams);
+        scene.refresh(gridParams, { ...scope }, component3);
+        scene.recalculateSpecific(newId);
+        scene.redraw(mode);
+       
+        break;
+      }
+
+
     }
 
     setRevision(revision + 1);
@@ -110,8 +237,8 @@ function App() {
 
   return (
     <div className={styles.App}>
-      <Graf grid={grid} mode={mode} revision={revision} />
-      <Sidebar onInput={onInput} config={{mode, gridParams, component3, fList, scope }} />
+      <Graf scene={scene} mode={mode} revision={revision} />
+      <Sidebar onInput={onInput} config={{ mode, gridParams, component3, fList, scope }} />
     </div>
   );
 }

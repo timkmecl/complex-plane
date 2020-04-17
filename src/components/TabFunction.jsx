@@ -41,7 +41,7 @@ const TabFunction = ({ onInput, fList, scope }) => {
 
 		if (id === 'newFunc') id = -1;
 
-		if (text === '') {
+		if (text === '') { // Izbriše prazno polje
 			changeList({
 				...list, list: list.list.filter(f => f.id != id)
 			})
@@ -51,8 +51,7 @@ const TabFunction = ({ onInput, fList, scope }) => {
 		let newList = [...list.list];
 		let i = newList.findIndex(f => f.id == id);
 
-
-		try {
+		try { // Preveri pravilnost matematike, nadaljuje le ce ni napake
 			m.evaluate(text, { ...scope });
 
 		} catch (err) {
@@ -69,7 +68,7 @@ const TabFunction = ({ onInput, fList, scope }) => {
 			let func = m.evaluate(text, scope);
 			let name;
 
-			if (func != undefined && func.name != undefined) {
+			if (func != undefined && func.name != undefined) { // Ce ze obstaja f. z istim imenom, jo deaktivira
 				newList = newList.map(f => {
 					f.inactive = (f.name == func.name) ? true : f.inactive;
 					return f;
@@ -83,7 +82,9 @@ const TabFunction = ({ onInput, fList, scope }) => {
 
 				changeList({ ...list, list: newList });
 			} else {
-				newList = [{ id: list.idNew, text, name: name, inactive: false }, ...newList];
+				if (name != undefined) { // Seznam funkcij se posodobi le, ce je bila dodana funkcija, ne parameter
+					newList = [{ id: list.idNew, text, name: name, inactive: false }, ...newList];
+				} 
 				changeList({
 					list: newList, idNew: list.idNew + 1, textNew: ""
 				});

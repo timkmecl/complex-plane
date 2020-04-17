@@ -92,13 +92,11 @@ export function calculateGrid(center, w, h, angle, nLinesV, nLinesH, psPerLine, 
 				math.abs(add(v2, multiply(-w/2, ang1))),
 				math.abs(add(v2, multiply(w/2, ang1))),),
 			min: Math.min(0, math.abs(add(v1, multiply(-w/2, ang1))),
-			math.abs(add(v1, multiply(w/2, ang1))),
-			math.abs(add(v2, multiply(-w/2, ang1))),
-			math.abs(add(v2, multiply(w/2, ang1))),)
+				math.abs(add(v1, multiply(w/2, ang1))),
+				math.abs(add(v2, multiply(-w/2, ang1))),
+				math.abs(add(v2, multiply(w/2, ang1))),)
 		}
 	};
-
-	console.log(info);
 
 	lines.push(info)
 	return lines;
@@ -139,8 +137,8 @@ export function calculateGridPolar(center, w, h, angle, nLinesV, nLinesH, psPerL
 	
 	let info = {
 		re: {
-			max: math.add(center, r).re,
-			min: math.subtract(center, r).re
+			max: math.add(center, complex(r, 0)).re,
+			min: math.subtract(center, complex(r, 0)).re
 		},
 		im: {
 			max: math.add(center, complex(0, r)).im,

@@ -6,11 +6,18 @@ import styles from './Sidebar.module.css'
 
 const TabGrid = ({ onInput, gridParams }) => {
 
+	function handleNew(e) {
+		onInput('gridNew');
+	}
+
 	return (
 		<div className={styles.gridList}>
+				<div onClick={handleNew} className={`${styles.newGridButton}`}>
+					<i className={`fas fa-plus`} ></i>
+				</div>
 			{
 				gridParams.grids.map(grid => (
-					<GridListItem onInput={onInput} grid={grid} />
+					<GridListItem key={grid[2]} onInput={onInput} grid={grid} />
 				))
 			}
 		</div>

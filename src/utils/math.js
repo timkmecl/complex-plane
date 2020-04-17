@@ -15,6 +15,7 @@ function importCustom() {
         Product: bigPi,
         product: bigPi,
         P: bigPi,
+        switch: switchF
       })
     return math;
 }
@@ -39,6 +40,7 @@ function bigSigma(args, math, scope) {
     return s;
   }
   bigSigma.rawArgs = true;
+  //"Sum(n, 0, 3, Sum(j, 0, 5, j)) "
   
   function bigPi(args, math, scope) {
     const str = args.map(function (arg) {
@@ -59,4 +61,7 @@ function bigSigma(args, math, scope) {
     return p;
   }
   bigPi.rawArgs = true;
-  //"Sum(n, 0, 3, Sum(j, 0, 5, j)) "
+
+  function switchF(x) {
+    return math.complex(x.im, x.re);
+  }

@@ -30,10 +30,11 @@ export default class Grid {
 
 
 	plt2d; plt3d;
-	params = {center: 0, nh:0, nv:0, angle:0, space:0, psPerSpace:0, color:true};
+	params = { center: 0, nh: 0, nv: 0, angle: 0, space: 0, psPerSpace: 0, color: true };
 	component3;
 	f;
 	id;
+	error;
 
 	revision = 0;
 	a3dAxesInfo;
@@ -48,18 +49,18 @@ export default class Grid {
 		this.plt3d = plt3d;
 	}
 
-	refresh(params, scope, component3) {
-		this.params = {...params[0], ...params[1]};
+	refresh(params, scope, component3, f) {
+		this.params = { ...params[0], ...params[1] };
 		this.id = params[2];
+		this.error = params[4];
 
-		let fCompiled = m.compile(this.params.funct);
-  	this.f = x => fCompiled.evaluate({ x, ...scope })
+		this.f = f;
 
 
-		if (this.params.component3.zAxis === 'auto'){
-			this.component3 = {...component3};
+		if (this.params.component3.zAxis === 'auto') {
+			this.component3 = { ...component3 };
 		} else {
-			this.component3 = {...this.params.component3};
+			this.component3 = { ...this.params.component3 };
 		}
 
 		if (this.component3.color === 'auto') {
@@ -79,7 +80,7 @@ export default class Grid {
 
 
 	recalculate() {
-		console.log("Recalculating");
+		console.log(`${this.id} _ Recalculating`);
 		let height = this.params.height === '=' ? this.params.width : this.params.height;
 		let nLinesH = this.params.nLinesH === '=' ? this.params.nLinesV : this.params.nLinesH;
 		if (this.params.gridType === 'cartesian') {
@@ -87,26 +88,28 @@ export default class Grid {
 		} else if (this.params.gridType === 'polar') {
 			this.lines = calculateGridPolar(this.params.center, this.params.width, height, this.params.angle, this.params.nLinesV, nLinesH, this.params.psPerLine, this.f);
 		}
+		this.info = this.lines[2];
 	}
 
-	redraw(mode) {
-		console.log(`Redrawing: ${mode}`);
-		//console.log(plt2d, plt3d);
+	redraw(mode, globalInfo) {
+		if (this.params.active) {
+			console.log(`${this.id} _ Redrawing: ${mode}`);
 
-		if (mode ==='3d' && this.plt2d != undefined) {
-			this.data3d = this.linesToData3d();
-			this.get3dAxesInfo();
-			this.mode = mode;
-			return this.data3d;
+			if (mode === '3d' && this.plt2d != undefined) {
+				this.data3d = this.linesToData3d(globalInfo);
+				this.mode = mode;
+				return this.data3d;
 
-		} else if (mode === '2d') {
-			this.data2d = this.linesToData2d();
-			this.mode = mode;
-			return this.data2d;
+			} else if (mode === '2d') {
+				this.data2d = this.linesToData2d();
+				this.mode = mode;
+				return this.data2d;
+			}
 		}
+		return [];
 	}
 
-	
+
 	linesToData2d() {
 		let newData = [];
 		this.lines[0].forEach((line) => {
@@ -123,7 +126,7 @@ export default class Grid {
 		let x = yy.map((e) => e.re);
 		let y = yy.map((e) => e.im);
 		let text = xx.map((e, i) => `f( ${math.format(e, 2)} )<br><i>${math.format(yy[i], 2)}</i>`);
-	
+
 		data.push({
 			...this.dataObjInit2d, name, x, y, hovertemplate: text,
 			opacity: this.params.color.opacity,
@@ -135,156 +138,147 @@ export default class Grid {
 	}
 
 
-	linesToData3d() {
+	linesToData3d(globalInfo) {
 		let newData = [];
 		let info = this.lines[2];
 		this.lines[0].forEach((line) => {
-			this.addLineToData3d(newData, line, '--', info, this.params.color.h);
+			this.addLineToData3d(newData, line, '--', info, this.params.color.h, globalInfo);
 		})
 		this.lines[1].forEach((line) => {
-			this.addLineToData3d(newData, line, '|', info, this.params.color.v);
+			this.addLineToData3d(newData, line, '|', info, this.params.color.v, globalInfo);
 		})
 		return newData;
 	}
 
-	
-	addLineToData3d(data, line, name, info, color) {
+
+	addLineToData3d(data, line, name, info, color, globalInfo) {
 		let [xx, yy] = line;
 		let x = yy.map((e) => e.re);
 		let y = yy.map((e) => e.im);
 		let text = xx.map((e, i) => `f( ${math.format(e, 2)} )<br><i>${math.format(yy[i], 2)}</i>`);
-	
+
 		let z = 0;
 		let c = 0;
-		
+
 		let isZDefined = true;
 		if (this.component3.zAxis === 'im') {
 			z = xx.map((e) => e.im);
-		} else if (this.component3.zAxis === 're'){
+		} else if (this.component3.zAxis === 're') {
 			z = xx.map((e) => e.re);
-		} else if (this.component3.zAxis === 'abs'){
+		} else if (this.component3.zAxis === 'abs') {
 			z = xx.map((e) => math.abs(e));
-		} else if (this.component3.zAxis === 'arg'){
+		} else if (this.component3.zAxis === 'arg') {
 			z = xx.map((e) => math.arg(e));
 		} else {
 			z = xx.map((e) => 0);
 			isZDefined = false;
 		}
-	
+
 		let line1 = {};
-		if (this.component3.color !== 'none' && isZDefined == true){
+		if (this.component3.color !== 'none' && isZDefined == true) {
 			let cmin = 0;
 			let cmax = 0;
 			if (this.component3.color === 'im') {
 				c = xx.map((e) => e.im);
-				cmin = info.im.min;
-				cmax = info.im.max;
-			} else if (this.component3.color === 're'){
+				cmin = globalInfo.im.min;
+				cmax = globalInfo.im.max;
+			} else if (this.component3.color === 're') {
 				c = xx.map((e) => e.re);
-				cmin = info.re.min;
-				cmax = info.re.max;
-			} else if (this.component3.color === 'arg'){
+				cmin = globalInfo.re.min;
+				cmax = globalInfo.re.max;
+			} else if (this.component3.color === 'arg') {
 				c = xx.map((e) => math.arg(e));
 				cmin = -3.141593;
 				cmax = 3.141593;
-			} else if (this.component3.color === 'abs'){
+			} else if (this.component3.color === 'abs') {
 				c = xx.map((e) => math.abs(e));
-				cmin = info.abs.min;
-				cmax = info.abs.max;
+				cmin = globalInfo.abs.min;
+				cmax = globalInfo.abs.max;
 			}
-	
+
 			line1 = {
-				width: this.params.color.width*2,
+				width: this.params.color.width * 2,
 				color: c,
 				colorscale: 'Viridis',
-				cmin, cmax}
+				cmin, cmax
+			}
 		} else {
-			line1= {
+			line1 = {
 				color: color,
-				width: this.params.color.width*2
+				width: this.params.color.width * 2
 			};
 		}
-	
+
 		data.push({
 			...this.dataObjInit3d, name, x, y, z, hovertemplate: text,
 			opacity: this.params.color.opacity,
 			line: line1
 		});
-	}
 
+		if (this.component3.hybrid) {
+			let [xx, yy] = line;
+			let x = yy.map((e) => e.re);
+			let y = yy.map((e) => e.im);
+			let text = xx.map((e, i) => `f( ${math.format(e, 2)} )<br><i>${math.format(yy[i], 2)}</i>`);
 
+			let z = 0;
+			let c = 0;
 
-	get3dAxesInfo() {
-		let rangeZ;
-		let rangeX = [-5, 5];
-		let rangeY = [-5, 5];
-		let aspectratio = 0;
-		let aspectmode = "cube";
-		let zaxis_title = getZAxisLabel(this.component3);
-		
-		if (this.plt2d.layout != undefined) {
-			let lengthX = Math.abs(this.plt2d.layout.xaxis.range[0] - this.plt2d.layout.xaxis.range[1])
-			let lengthY = Math.abs(this.plt2d.layout.yaxis.range[0] - this.plt2d.layout.yaxis.range[1])
-
-			if (lengthX > lengthY) {
-				let center = (this.plt2d.layout.yaxis.range[0] + this.plt2d.layout.yaxis.range[1]) / 2
-				rangeX = this.plt2d.layout.xaxis.range;
-				rangeY = [center - lengthX / 2, center + lengthX / 2]
+			let isZDefined = true;
+			if (this.component3.zAxis === 'im') {
+				z = xx.map((e) => e.re);
+			} else if (this.component3.zAxis === 're') {
+				z = xx.map((e) => e.im);
+			} else if (this.component3.zAxis === 'arg') {
+				z = xx.map((e) => -3.141593);
+				isZDefined = false;
 			} else {
-				let center = (this.plt2d.layout.xaxis.range[0] + this.plt2d.layout.xaxis.range[1]) / 2
-				rangeY = this.plt2d.layout.yaxis.range;
-				rangeX = [center - lengthY / 2, center + lengthY / 2]
+				z = xx.map((e) => 0);
+				isZDefined = false;
 			}
-				
-			[rangeZ, aspectratio] = this.getZRange(Math.max(lengthX, lengthY));
-			aspectmode = "manual";
-		}
 
-		this.a3dAxesInfo =  {rangeX, rangeY, rangeZ, aspectratio, aspectmode, zaxis_title};
-		console.log("ZrangeInfo")
+			let line1 = {};
+			if (this.component3.color !== 'none' && isZDefined == true) {
+				let cmin = 0;
+				let cmax = 0;
+				if (this.component3.color === 'im') {
+					c = xx.map((e) => e.re);
+					cmin = globalInfo.re.min;
+					cmax = globalInfo.re.max;
+				} else if (this.component3.color === 're') {
+					c = xx.map((e) => e.im);
+					cmin = globalInfo.im.min;
+					cmax = globalInfo.im.max;
+				} else if (this.component3.color === 'arg') {
+					c = xx.map((e) => math.arg(e));
+					cmin = -3.141593;
+					cmax = 3.141593;
+				} else if (this.component3.color === 'abs') {
+					c = xx.map((e) => math.abs(e));
+					cmin = globalInfo.abs.min;
+					cmax = globalInfo.abs.max;
+				}
+
+				line1 = {
+					width: this.params.color.width * 2,
+					color: c,
+					colorscale: 'Viridis',
+					cmin, cmax,
+				}
+			} else {
+				line1 = {
+					color: color,
+					width: this.params.color.width * 2,
+				};
+			}
+
+			data.push({
+				...this.dataObjInit3d, name, x, y, z,
+				hoverinfo: 'skip',
+				opacity: this.params.color.opacity*0.2,
+				line: line1
+			});
+		}
 	}
 
-	getZRange(lengthXY) {
-		let info = this.lines[2];
-		let zMin = 0;
-		let zMax = 0;
-		if (this.component3.zAxis === 're') {
-			zMin = info.re.min;
-			zMax = info.re.max;
-		} else if (this.component3.zAxis === 'im') {
-			zMin = info.im.min;
-			zMax = info.im.max;
-		} else if (this.component3.zAxis === 'abs') {
-			zMin = 0;
-			zMax = Math.sqrt(info.re.max*info.re.max + info.im.max*info.im.max);
-		} else if (this.component3.zAxis === 'arg') {
-			zMin = -3.141593;
-			zMax = 3.141593;
-		}
-
-		if (zMin-zMax == 0){
-			zMax = 0.001;
-		}
-
-		let lengthZ = zMax - zMin;
-		let rangeZ = [zMin, zMax];
-		let aspect = {x:1, y:1, z:lengthZ / lengthXY};
-	
-		return [rangeZ, aspect];
-	}
-}
-
-
-
-
-function getZAxisLabel(component3z) {
-	if( component3z.zAxis === 'im'){
-		return 'Im(x)';
-	} else if( component3z.zAxis === 're') {        
-		return 'Re(x)';
-	} else if( component3z.zAxis === 'abs') {        
-		return 'abs(x)';
-	} else if( component3z.zAxis === 'arg') {        
-		return 'arg(x)';
-	}
 }

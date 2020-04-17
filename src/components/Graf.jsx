@@ -101,7 +101,7 @@ const layoutInit3d = {
   }
 }
 
-const Graf = ({grid, mode, revision}) => {
+const Graf = ({scene, mode, revision}) => {
 
   let [plt2d, setPlt2d] = useState({
     data: [],
@@ -115,19 +115,16 @@ const Graf = ({grid, mode, revision}) => {
     config: configInit,
     uirevision: 1
   })
-
-  let [lines, setLines] = useState()
   
   
   useEffect(() => {
-    grid.setPlot(plt2d, plt3d);
+    scene.setPlot(plt2d, plt3d);
   }, []);
   
 
   useEffect(() => {
-    console.log(grid.mode);
-    if (grid.mode === '3d') {
-        let   {rangeX, rangeY, rangeZ, aspectratio, aspectmode, zaxis_title} = grid.a3dAxesInfo;
+    if (scene.mode === '3d') {
+        let   {rangeX, rangeY, rangeZ, aspectratio, aspectmode, zaxis_title} = scene.a3dAxesInfo;
         let newLayout = plt3d.layout;
 
         newLayout.scene.xaxis.range = rangeX;
@@ -139,14 +136,14 @@ const Graf = ({grid, mode, revision}) => {
         setPlt3d({...plt3d, layout:newLayout});
       }
     
-  }, [grid.mode, grid.a3dAxesInfo]);
+  }, [scene.mode, scene.a3dAxesInfo]);
 
   useEffect(() => {
-    setPlt2d({...plt2d, data:grid.data2d});
-  }, [grid.data2d]);
+    setPlt2d({...plt2d, data:scene.data2d});
+  }, [scene.data2d]);
   useEffect(() => {
-    setPlt3d({...plt3d, data:grid.data3d});
-  }, [grid.data3d]);
+    setPlt3d({...plt3d, data:scene.data3d});
+  }, [scene.data3d]);
 
 
   const update2d = (figure) => {
