@@ -8,6 +8,12 @@
 	color: rgb(102, 102, 102);
 	color: rgb(23, 23, 23);
 	background-color: rgb(253, 253, 253);
+
+	display:flex;
+	flex-direction:column;
+	align-items:center;
+	overflow:hidden;
+	min-width: 19.18rem;
 }
 
 
@@ -59,6 +65,9 @@
 .content {
 	font-size: 1rem;
 	padding: 0.5rem;
+	width: 100%;
+	max-width: 30rem;
+	overflow: auto;
 }
 
 .inivisible {
@@ -80,7 +89,7 @@
 	justify-content: center;
 	text-align: center;
 
-	margin: 0.8rem auto 2rem;
+	margin: 1.5rem auto 2rem;
 	width: fit-content;
 
 	padding: 0 0.5rem;
@@ -134,6 +143,16 @@ select {
 	border-left: 3px solid #00bdaa;
 }
 
+.viewOptions input {
+	border-radius: 2px;
+	color: inherit;
+
+	width:100%;
+	text-align: left;
+	
+	padding: 0.15rem 0.3rem 0.15rem;
+}
+
 select:focus {
 	background-color: rgba(246, 246, 246, 1);
 	border: none;
@@ -145,10 +164,13 @@ label {
 	padding-right: 0.5rem;
 }
 
+hr {
+	border: 1px solid rgba(246, 246, 246, 1);
+	margin: 0.7rem auto;
+}
+
 
 /*     Functions list     */
-
-
 
 .functionListItem {
 	width: 100%;
@@ -229,7 +251,7 @@ input:focus {
 /*     Grid list     */
 
 
-.newGridButton {
+.newButton {
 	opacity: 0.5;
 	color: rgb(102, 102, 102);
 	font-size: 1.3rem;
@@ -237,7 +259,7 @@ input:focus {
 	width: fit-content;
 	cursor: pointer;
 }
-.newGridButton:hover {
+.newButton:hover {
 	opacity: 0.75;
 }
 
@@ -337,17 +359,96 @@ input:focus {
 }
 
 
-.grid {
+.listItem {
 	padding: 0.1rem 0;
 	margin-bottom: 1.5rem;
 	border: 1px solid #00bdaa80;
 	border-left: 3px solid #00bdaa;
 	border-radius: 5px;
 }
-.gridError {
+.listItemError {
 	color: rgb(255, 0, 0);
 	border: 1px solid rgb(255, 145, 0);
 	border-left: 3px solid rgb(255, 145, 0);
 	opacity: 0.5;
 	font-style: italic;
+}
+
+
+
+/* Slider list */
+
+.sliderHead  {
+	display: grid;
+	grid-template-columns: 5rem 1rem 1fr !important;
+	justify-content: center;
+	align-items: center;
+	margin: 0.8rem 0;
+	padding: 0 0.5rem 0 0.8rem;
+}
+
+.sliderHead label {
+	text-align: center;
+	padding-right: 0;
+}
+
+.sliderContainer {
+	width: 100%;
+	font-size:0.9rem;
+	margin: 0.8rem 0;
+	padding: 0 0.5rem 0 0.8rem;
+	height:1.7rem;
+
+	display: grid;
+	grid-template-columns: 1fr 5fr 1fr;
+	justify-content: center;
+	align-items: center;
+}
+
+
+.slider:hover {
+  opacity: 1;
+}
+
+.slider {
+	width: 90%;
+	padding: 0;
+	margin: 0 auto;
+
+  -webkit-appearance: none;  
+  appearance: none;
+	height: 4px; 
+	
+	background: rgb(102, 102, 102, 0.5) !important; 
+	opacity: 0.75;
+	outline: none;  
+	
+  -webkit-transition: .2s; 
+	transition: opacity .2s;
+
+	border-bottom: none !important;
+	border-radius: 2px;
+	padding: 0;
+}
+
+.slider:hover {
+  opacity: 1;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none; 
+  appearance: none;
+  width: 0.7rem; 
+  height: 1.5rem; 
+  background: #00a08f; 
+  cursor: pointer; 
+	border-radius: 5px;
+}
+
+.slider::-moz-range-thumb {
+  width: 0.7rem; 
+  height: 1.5rem; 
+  background: #00a08f; 
+  cursor: pointer; 
+	border-radius: 5px;
 }

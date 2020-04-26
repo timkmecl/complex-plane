@@ -1,8 +1,6 @@
-import React, { useState, useEffect } from 'react'
-
+import React, { useState } from 'react'
 
 import { m } from '../utils/math';
-
 import styles from './Sidebar.module.css'
 
 const TabFunction = ({ onInput, fList, scope }) => {

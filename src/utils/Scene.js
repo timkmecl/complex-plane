@@ -1,23 +1,5 @@
-import GridClass, { getZAxisLabel } from './GridClass';
+import GridClass from './GridClass';
 import { m } from '../utils/math';
-
-
-const dataObjInit2d = {
-	name: "",
-	line: {
-		color: "rgba(35, 110, 160, 0.8)"
-	},
-	mode: 'lines',
-	type: 'scatter'
-}
-const dataObjInit3d = {
-	name: "",
-	line: {
-		color: "rgba(35, 110, 160, 0.8)"
-	},
-	mode: 'lines',
-	type: 'scatter3d'
-}
 
 
 export default class Scene {
@@ -59,6 +41,7 @@ export default class Scene {
 			err[0] = null;
 
 			let f;
+			let f1;
 
 			if (params[1].color.a !== undefined) {
 				params[1].color.h = '=';
@@ -74,14 +57,28 @@ export default class Scene {
 				}
 				let fCompiled = m.compile(params[0].funct);
 				f = x => fCompiled.evaluate({ x, ...scope })
+				f(m.complex(1.2345, 1.23456));
 
-				params[0].center = m.evaluate(params[0].center, scope);
-				params[0].angle = m.evaluate(params[0].angle, scope);
-				params[0].psPerLine = m.evaluate(params[0].psPerLine, scope);
-				params[0].width = m.evaluate(params[0].width, scope);
-				params[0].nLinesV = m.evaluate(params[0].nLinesV, scope);
-				params[0].height = params[0].height !== "=" ? m.evaluate(params[0].height, scope) : "=";
-				params[0].nLinesH = params[0].nLinesH !== "=" ? m.evaluate(params[0].nLinesH, scope) : "=";
+				if (params[0].gridType === 'parametric') {
+					if (params[0].functParametric == '') {
+						params[0].functParametric = 't';
+					}
+					let fCompiled1 = m.compile(params[0].functParametric);
+					f1 = t => fCompiled1.evaluate({ t, ...scope })
+					f1(m.complex(1.2345, 1.23456));
+
+					params[0].stepSizeParametric = m.evaluate(params[0].stepSizeParametric, scope);
+					params[0].fromParametric = m.evaluate(params[0].fromParametric, scope);
+					params[0].toParametric = m.evaluate(params[0].toParametric, scope);
+				} else {
+					params[0].center = m.evaluate(params[0].center, scope);
+					params[0].angle = m.evaluate(params[0].angle, scope);
+					params[0].psPerLine = m.evaluate(params[0].psPerLine, scope);
+					params[0].width = m.evaluate(params[0].width, scope);
+					params[0].nLinesV = m.evaluate(params[0].nLinesV, scope);
+					params[0].height = params[0].height !== "=" ? m.evaluate(params[0].height, scope) : "=";
+					params[0].nLinesH = params[0].nLinesH !== "=" ? m.evaluate(params[0].nLinesH, scope) : "=";
+				}
 				params[1].color.h = params[1].color.h == "=" ? params[1].color.v : params[1].color.h;
 
 			} catch (e) {
@@ -102,11 +99,12 @@ export default class Scene {
 				grid = this.grids[index];
 			}
 
-			grid.refresh(params, scope, component3, f);
+			grid.refresh(params, component3, f, f1);
 		})
 
 		this.revision++;
 	}
+
 
 
 	recalculate() { // Na novo preračuna vse točke vseh mrež
@@ -131,7 +129,8 @@ export default class Scene {
 	redraw(mode) {
 		this.mode = mode;
 		let start = true;
-
+		
+		this.recaluclateLimitInfo();
 		this.get3dAxesInfo();
 
 		this.grids.forEach(grid => { // na novo pretvori točke vseh mrež v data
@@ -154,35 +153,47 @@ export default class Scene {
 				this.data2d = this.data2d.concat(newData);
 			}
 		})
+		this.recaluclateLimitInfo();
 	}
+
+
+
+
 
 	recaluclateLimitInfo() { // ugotovi največji razpon glede na dimenzije (pomebno za usklajenost barv različnih mrež)
 		this.limitInfo = { im: {}, re: {}, abs: {} };
-		this.grids.forEach((grid, i) => {
-			if (grid.error[0] != null) return;
-			if (grid.params.active == false) return;
-			let info = grid.info;
-			console.log(i);
-			if (i == 0) {
-				this.limitInfo = { im: { ...info.im }, re: { ...info.re }, abs: { ...info.abs } };
-			} else {
-				const update = ax => {
-					if (info[ax].min < this.limitInfo[ax].min) {
-						this.limitInfo[ax].min = info[ax].min;
+		if (this.component3.base !== 'id') {
+			let start = true;
+			this.grids.forEach((grid, i) => {
+				if (grid.error[0] != null) return;
+				if (grid.params.active == false) return;
+
+				let info = grid.info;
+				if (start) {
+					this.limitInfo = { im: { ...info.im }, re: { ...info.re }, abs: { ...info.abs } };
+					start = false;
+				} else {
+					const update = ax => {
+						if (info[ax].min < this.limitInfo[ax].min) {
+							this.limitInfo[ax].min = info[ax].min;
+						}
+						if (info[ax].max > this.limitInfo[ax].max) {
+							this.limitInfo[ax].max = info[ax].max;
+						}
 					}
-					if (info[ax].max > this.limitInfo[ax].max) {
-						this.limitInfo[ax].max = info[ax].max;
-					}
+					update('re');
+					update('im');
+					update('abs');
 				}
-				update('re');
-				update('im');
-				update('abs');
-			}
-		})
+			})
+		} else {
+			let temp = {max: this.component3.baseIdZ, min: -this.component3.baseIdZ}
+			this.limitInfo = { im: temp, re: temp, abs: {...temp, min: 0} };
+		}
 	}
 
 
-	get3dAxesInfo() {
+	get3dAxesInfo() {  // določi razmerje stranic pri 3d
 		let rangeZ;
 		let rangeX = [-5, 5];
 		let rangeY = [-5, 5];
@@ -245,14 +256,15 @@ export default class Scene {
 		return [rangeZ, aspect];
 	}
 	getZAxisLabel(component3) {
+		let xfx = component3.base === 'id' ? 'f(x)' : 'x';
 		if (component3.zAxis === 'im') {
-			return 'Im(x)';
+			return `Im(${xfx})`;
 		} else if (component3.zAxis === 're') {
-			return 'Re(x)';
+			return `Re(${xfx})`;
 		} else if (component3.zAxis === 'abs') {
-			return 'abs(x)';
+			return `abs(${xfx})`;
 		} else if (component3.zAxis === 'arg') {
-			return 'arg(x)';
+			return `arg(${xfx})`;
 		}
 	}
 

@@ -1,6 +1,5 @@
-import { calculateGrid, calculateGridPolar } from './grid';
+import { calculateGrid, calculateGridPolar, calculateParametric } from './grid';
 
-import { m } from '../utils/math';
 import { create, all } from 'mathjs';
 const config_mjs = {};
 const math = create(all, config_mjs);
@@ -29,10 +28,12 @@ export default class Grid {
 
 
 
+
 	plt2d; plt3d;
 	params = { center: 0, nh: 0, nv: 0, angle: 0, space: 0, psPerSpace: 0, color: true };
 	component3;
 	f;
+	fParametric;
 	id;
 	error;
 
@@ -49,12 +50,13 @@ export default class Grid {
 		this.plt3d = plt3d;
 	}
 
-	refresh(params, scope, component3, f) {
+	refresh(params, component3, f, fParametric) {
 		this.params = { ...params[0], ...params[1] };
 		this.id = params[2];
 		this.error = params[4];
 
 		this.f = f;
+		this.fParametric = fParametric;;
 
 
 		if (this.params.component3.zAxis === 'auto') {
@@ -87,6 +89,8 @@ export default class Grid {
 			this.lines = calculateGrid(this.params.center, this.params.width, height, this.params.angle, this.params.nLinesV, nLinesH, this.params.psPerLine, this.f);
 		} else if (this.params.gridType === 'polar') {
 			this.lines = calculateGridPolar(this.params.center, this.params.width, height, this.params.angle, this.params.nLinesV, nLinesH, this.params.psPerLine, this.f);
+		}else if (this.params.gridType === 'parametric') {
+			this.lines = calculateParametric(this.params.fromParametric, this.params.toParametric, this.params.stepSizeParametric, this.f, this.fParametric);
 		}
 		this.info = this.lines[2];
 	}
@@ -122,7 +126,13 @@ export default class Grid {
 	}
 
 	addLineToData2d(data, line, name, color) {
-		let [xx, yy] = line;
+		let xx, yy;
+		if (this.component3.base !== 'id') {
+			[xx, yy] = line;
+		} else {
+			[yy, xx] = line;
+		}
+		
 		let x = yy.map((e) => e.re);
 		let y = yy.map((e) => e.im);
 		let text = xx.map((e, i) => `f( ${math.format(e, 2)} )<br><i>${math.format(yy[i], 2)}</i>`);
@@ -152,11 +162,18 @@ export default class Grid {
 
 
 	addLineToData3d(data, line, name, info, color, globalInfo) {
-		let [xx, yy] = line;
+		let xx, yy;
+		let text;
+		if (this.component3.base !== 'id') {
+			[xx, yy] = line;
+			text = xx.map((e, i) => `f( ${math.format(e, 2)} )<br><i>${math.format(yy[i], 2)}</i>`);
+		} else {
+			[yy, xx] = line;
+			text = yy.map((e, i) => `f( ${math.format(e, 2)} )<br><i>${math.format(xx[i], 2)}</i>`);
+		}
+
 		let x = yy.map((e) => e.re);
 		let y = yy.map((e) => e.im);
-		let text = xx.map((e, i) => `f( ${math.format(e, 2)} )<br><i>${math.format(yy[i], 2)}</i>`);
-
 		let z = 0;
 		let c = 0;
 
@@ -199,7 +216,7 @@ export default class Grid {
 			line1 = {
 				width: this.params.color.width * 2,
 				color: c,
-				colorscale: 'Viridis',
+				colorscale: this.component3.colorscale,
 				cmin, cmax
 			}
 		} else {
@@ -216,11 +233,6 @@ export default class Grid {
 		});
 
 		if (this.component3.hybrid) {
-			let [xx, yy] = line;
-			let x = yy.map((e) => e.re);
-			let y = yy.map((e) => e.im);
-			let text = xx.map((e, i) => `f( ${math.format(e, 2)} )<br><i>${math.format(yy[i], 2)}</i>`);
-
 			let z = 0;
 			let c = 0;
 
@@ -231,7 +243,10 @@ export default class Grid {
 				z = xx.map((e) => e.im);
 			} else if (this.component3.zAxis === 'arg') {
 				z = xx.map((e) => -3.141593);
-				isZDefined = false;
+				//isZDefined = false;
+			} else if (this.component3.zAxis === 'abs') {
+				z = xx.map((e) => 0);
+				//isZDefined = false;
 			} else {
 				z = xx.map((e) => 0);
 				isZDefined = false;
@@ -242,13 +257,13 @@ export default class Grid {
 				let cmin = 0;
 				let cmax = 0;
 				if (this.component3.color === 'im') {
-					c = xx.map((e) => e.re);
-					cmin = globalInfo.re.min;
-					cmax = globalInfo.re.max;
-				} else if (this.component3.color === 're') {
 					c = xx.map((e) => e.im);
 					cmin = globalInfo.im.min;
 					cmax = globalInfo.im.max;
+				} else if (this.component3.color === 're') {
+					c = xx.map((e) => e.re);
+					cmin = globalInfo.re.min;
+					cmax = globalInfo.re.max;
 				} else if (this.component3.color === 'arg') {
 					c = xx.map((e) => math.arg(e));
 					cmin = -3.141593;
@@ -262,7 +277,7 @@ export default class Grid {
 				line1 = {
 					width: this.params.color.width * 2,
 					color: c,
-					colorscale: 'Viridis',
+					colorscale: this.component3.colorscale,
 					cmin, cmax,
 				}
 			} else {
@@ -275,7 +290,7 @@ export default class Grid {
 			data.push({
 				...this.dataObjInit3d, name, x, y, z,
 				hoverinfo: 'skip',
-				opacity: this.params.color.opacity*0.2,
+				opacity: this.params.color.opacity*0.18,
 				line: line1
 			});
 		}

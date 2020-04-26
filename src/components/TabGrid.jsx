@@ -1,7 +1,6 @@
 import React from 'react'
 
 import GridListItem from './GridListItem';
-
 import styles from './Sidebar.module.css'
 
 const TabGrid = ({ onInput, gridParams }) => {
@@ -12,7 +11,7 @@ const TabGrid = ({ onInput, gridParams }) => {
 
 	return (
 		<div className={styles.gridList}>
-				<div onClick={handleNew} className={`${styles.newGridButton}`}>
+				<div onClick={handleNew} className={`${styles.newButton}`}>
 					<i className={`fas fa-plus`} ></i>
 				</div>
 			{

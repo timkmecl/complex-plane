@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 import { ChromePicker } from 'react-color';
 
-
 import styles from './Sidebar.module.css'
 import cpStyles from './ColorPicker.module.css'
 
@@ -71,7 +70,7 @@ const GridListItem = ({ grid, onInput }) => {
 
 
 	return (
-		<div key={grid[2]} className={`${styles.grid} ${grid[4][0] != null && styles.gridError}`}>
+		<div key={grid[2]} className={`${styles.listItem} ${grid[4][0] != null && styles.listItemError}`}>
 			<div className={`${styles.gridTopMenu}`}>
 				<div onClick={toggleVisibility} className={`${styles.gridTopMenuItem} ${styles.gridTopMenuVisibility}`}>
 					<i className={grid[4][0] == null ? (grid[0].active ? `fas fa-eye` : `fas fa-eye-slash`) : `fas fa-low-vision`} ></i>
@@ -94,7 +93,7 @@ const GridListItem = ({ grid, onInput }) => {
 			</div>
 
 			<div className={`${styles.formGroup}`} >
-				<label htmlFor="a" >x &rarr;</label>
+				<label htmlFor="funct" >x &rarr;</label>
 				<input type="text" name={`funct`} value={grid[0].funct} onChange={handleChange} onKeyDown={handleKeyDown} onBlur={handleBlur} placeholder="< f(x) >"></input>
 			</div>
 
@@ -113,23 +112,51 @@ const GridListItem = ({ grid, onInput }) => {
 				</span>
 			</div>
 
+			{grid[0].gridType !== 'parametric' ?
+				<>
+					<div className={`${styles.formGroup}`} >
+						<label htmlFor="center" >center: </label>
+						<input type="text" name={`center`} value={grid[0].center} onChange={handleChange} onKeyDown={handleKeyDown} onBlur={handleBlur} placeholder="< 0 + 0i >"></input>
+					</div>
 
-			<div className={`${styles.formGroup}`} >
-				<label htmlFor="a" >center: </label>
-				<input type="text" name={`center`} value={grid[0].center} onChange={handleChange} onKeyDown={handleKeyDown} onBlur={handleBlur} placeholder="< 0 + 0i >"></input>
-			</div>
-			<div className={`${styles.formGroup} ${styles.formGroupWide}`} >
-				<label htmlFor="a" >size: </label>
-				<input type="text" name={`width`} value={grid[0].width} onChange={handleChange} onKeyDown={handleKeyDown} onBlur={handleBlur} placeholder="< w >"></input>
-				<span>&#215;</span>
-				<input type="text" name={`height`} value={grid[0].height} onChange={handleChange} onKeyDown={handleKeyDown} onBlur={handleBlur} placeholder="< h >"></input>
-			</div>
-			<div className={`${styles.formGroup} ${styles.formGroupWide}`} >
-				<label htmlFor="a" >lines: </label>
-				<input type="text" name={`nLinesV`} value={grid[0].nLinesV} onChange={handleChange} onKeyDown={handleKeyDown} onBlur={handleBlur} placeholder="< #v >"></input>
-				<span>&#215;</span>
-				<input type="text" name={`nLinesH`} value={grid[0].nLinesH} onChange={handleChange} onKeyDown={handleKeyDown} onBlur={handleBlur} placeholder="< #h >"></input>
-			</div>
+					{grid[0].gridType === 'cartesian' ?
+						<div className={`${styles.formGroup} ${styles.formGroupWide}`} >
+							<label htmlFor="width" >size: </label>
+							<input type="text" name={`width`} value={grid[0].width} onChange={handleChange} onKeyDown={handleKeyDown} onBlur={handleBlur} placeholder="< w >"></input>
+							<span>&#215;</span>
+							<input type="text" name={`height`} value={grid[0].height} onChange={handleChange} onKeyDown={handleKeyDown} onBlur={handleBlur} placeholder="< h >"></input>
+						</div> :
+						<div className={`${styles.formGroup}`} >
+							<label htmlFor="width" >radius: </label>
+							<input type="text" name={`width`} value={grid[0].width} onChange={handleChange} onKeyDown={handleKeyDown} onBlur={handleBlur} placeholder="< 2r >"></input>
+						</div>
+					}
+
+					<div className={`${styles.formGroup} ${styles.formGroupWide}`} >
+						<label htmlFor="nLinesV" >lines: </label>
+						<input type="text" name={`nLinesV`} value={grid[0].nLinesV} onChange={handleChange} onKeyDown={handleKeyDown} onBlur={handleBlur} placeholder={grid[0].gridType === 'cartesian' ? "< #v >" : "#c"}></input>
+						<span>&#215;</span>
+						<input type="text" name={`nLinesH`} value={grid[0].nLinesH} onChange={handleChange} onKeyDown={handleKeyDown} onBlur={handleBlur} placeholder={grid[0].gridType === 'cartesian' ? "< #h >" : "#r"}></input>
+					</div>
+				</>
+				:
+				<>
+					<div className={`${styles.formGroup}`} >
+						<label htmlFor="functParametric" >x = s(t) = </label>
+						<input type="text" name={`functParametric`} value={grid[0].functParametric} onChange={handleChange} onKeyDown={handleKeyDown} onBlur={handleBlur} placeholder="< s(t) >"></input>
+					</div>
+					<div className={`${styles.formGroup} ${styles.formGroupWide}`} >
+						<label htmlFor="fromParametric" >t range: </label>
+						<input type="text" name={`fromParametric`} value={grid[0].fromParametric} onChange={handleChange} onKeyDown={handleKeyDown} onBlur={handleBlur} placeholder={grid[0].gridType === 'cartesian' ? "< #v >" : "#c"}></input>
+						<span>-</span>
+						<input type="text" name={`toParametric`} value={grid[0].toParametric} onChange={handleChange} onKeyDown={handleKeyDown} onBlur={handleBlur} placeholder={grid[0].gridType === 'cartesian' ? "< #h >" : "#r"}></input>
+					</div>
+					<div className={`${styles.formGroup}`} >
+						<label htmlFor="stepSizeParametric" >step size: </label>
+						<input type="text" name={`stepSizeParametric`} value={grid[0].stepSizeParametric} onChange={handleChange} onKeyDown={handleKeyDown} onBlur={handleBlur} placeholder="< 0.01 >"></input>
+					</div>
+
+				</>}
 		</div>
 	)
 }

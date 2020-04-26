@@ -125,12 +125,15 @@ const Graf = ({scene, mode, revision}) => {
   useEffect(() => {
     if (scene.mode === '3d') {
         let   {rangeX, rangeY, rangeZ, aspectratio, aspectmode, zaxis_title} = scene.a3dAxesInfo;
+        let base = scene.component3.base === 'id' ? 'x' : 'f(x)';
         let newLayout = plt3d.layout;
 
         newLayout.scene.xaxis.range = rangeX;
         newLayout.scene.yaxis.range = rangeY;
         newLayout.scene.zaxis.range = rangeZ;
         newLayout.scene.zaxis.title = zaxis_title;
+        newLayout.scene.xaxis.title = `Re(${base})`;
+        newLayout.scene.yaxis.title = `Im(${base})`;
         newLayout.scene.aspectmode = aspectmode;
         newLayout.scene.aspectratio = aspectratio;
         setPlt3d({...plt3d, layout:newLayout});

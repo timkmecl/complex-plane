@@ -15,7 +15,10 @@ function importCustom() {
         Product: bigPi,
         product: bigPi,
         P: bigPi,
-        switch: switchF
+        switch: switchF,
+        interp: interp,
+        interpolate: interp,
+        rotate4d: rotate4d
       })
     return math;
 }
@@ -64,4 +67,11 @@ function bigSigma(args, math, scope) {
 
   function switchF(x) {
     return math.complex(x.im, x.re);
+  }
+
+  function interp(x, y, t) {
+    return math.add(math.multiply(x, 1-t), math.multiply(y, t));
+  }
+  function rotate4d(z, phi) {
+    return math.multiply(z, math.exp(math.complex(0, phi)))
   }

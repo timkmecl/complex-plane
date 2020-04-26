@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styles from './App.module.css';
 
-import { complex } from 'mathjs';
 import { m } from './utils/math';
-import GridClass from './utils/GridClass';
 import Scene from './utils/Scene';
 
 import Graf from './components/Graf.jsx';
@@ -12,6 +10,7 @@ import Sidebar from './components/Sidebar.jsx'
 
 const scopeInit = {};
 m.evaluate("f(x) = sin(x)", scopeInit);
+m.evaluate("a=0", scopeInit);
 
 const newGridTemplate = [
   {
@@ -27,6 +26,11 @@ const newGridTemplate = [
     height: '=',
     nLinesV: 5,
     nLinesH: '=',
+
+    stepSizeParametric: 0.01,
+    functParametric: '',
+    fromParametric: -1,
+    toParametric: 1,
   },
   {
     color: {
@@ -50,6 +54,12 @@ function App() {
   // Seznam vseh funkcij (v text obliki, dejanske funkcije shranjene v scope)
   let [fList, setFList] = useState({ list: [{ text: "f(x) = sin(x)", id: 0, name: 'f' }], idNew: 1 });
   let [scope] = useState(scopeInit);
+  let [sliders, setSliders] = useState({
+    list: [
+      { id: 0, name: 'a', value: 0, left: -1, right: 1, stepSize: 0.01 }],
+    nextId: 1
+  });
+  let [lastSliderChangeRev, setLastSliderChangeRev] = useState([0]);
 
   // Seznam vseh parametrov mrež
   let [gridParams, setGridParams] = useState({
@@ -67,6 +77,11 @@ function App() {
         height: '=',
         nLinesV: 11,
         nLinesH: '=',
+
+        stepSizeParametric: 0.01,
+        functParametric: '',
+        fromParametric: -1,
+        toParametric: 1,
       },
       {
         color: {
@@ -82,7 +97,7 @@ function App() {
           zAxis: 'auto',
           color: 'auto',
         }
-      }, 0, 0, []],
+      }, 0, 0, []], // id, revision(ni v uporabi), errors
     ],
 
     nextId: 1,
@@ -95,7 +110,11 @@ function App() {
   );
 
   let [mode, setMode] = useState('2d');
-  let [component3, setComponent3] = useState({ zAxis: 're', color: 'auto', hybrid: true, });
+  let [component3, setComponent3] = useState({
+    zAxis: 're', color: 'auto', hybrid: false,
+    colorscale: 'RdBu', 
+    base: 'f', baseIdZ: 5
+  });
 
   let [revision, setRevision] = useState(0)
   let [rev2] = useState(0)
@@ -115,7 +134,7 @@ function App() {
 
   function onInput(action, content) {
     switch (action) {
-      case '2d3d': {
+      case '2d3d': { // prestavljanje med 2d in 3d
         if (content == '2d') {
           scene.redraw('2d');
           setMode('2d')
@@ -123,44 +142,44 @@ function App() {
           scene.redraw('3d');
           setMode('3d')
         }
-       
+
         break;
       }
 
-      case 'component3': {
+      case 'component3': { // z os in barva v 3d
         let newComp3 = { ...component3 };
         newComp3[content.which] = content.option;
         setComponent3(newComp3);
 
         scene.refresh(gridParams, { ...scope }, newComp3);
         scene.redraw(mode);
-       
+
         break;
       }
 
-      case 'functionChanged': {
+      case 'functionChanged': { // spreminjanje funkcije
         setFList(content.list);
 
         scene.refresh(gridParams, { ...scope }, component3);
         scene.recalculate()
         scene.redraw(mode);
-       
+
         break;
       }
 
-      case 'gridParamChanged': { 
+      case 'gridParamChanged': { // spreminjanje parametrov mrež ob tipkanju
         let index = gridParams.grids.findIndex(g => g[2] == content.id);
         gridParams.grids[index][0][content.name] = content.value;
         setGridParams(gridParams);
 
-       break;
+        break;
       }
 
-      case 'gridParamChangedCommit': {
+      case 'gridParamChangedCommit': { // preračunavanje mreže z novimi parametri
         scene.refresh(gridParams, { ...scope }, component3);
         scene.recalculateSpecific(content.id);
         scene.redraw(mode);
-       
+
         break;
       }
 
@@ -174,37 +193,39 @@ function App() {
         scene.refresh(gridParams, { ...scope }, component3);
         scene.recalculateSpecific(newId);
         scene.redraw(mode);
-       
+
         break;
       }
 
-      case 'gridToggleVisible': {
+      case 'gridToggleVisible': { // Dodatne opcije pri mrežah
         let index = gridParams.grids.findIndex(g => g[2] == content.id);
         gridParams.grids[index][0].active = !gridParams.grids[index][0].active;
         setGridParams(gridParams);
         scene.refresh(gridParams, { ...scope }, component3);
         scene.recalculateSpecific(content.id);
         scene.redraw(mode);
-       
+
         break;
       }
       case 'gridChangeColor': {
         let index = gridParams.grids.findIndex(g => g[2] == content.id);
-        gridParams.grids[index][1].color = {...gridParams.grids[index][1].color,
-          ...content.color};
+        gridParams.grids[index][1].color = {
+          ...gridParams.grids[index][1].color,
+          ...content.color
+        };
         setGridParams(gridParams);
         scene.refresh(gridParams, { ...scope }, component3);
         scene.redraw(mode);
-       
+
         break;
       }
       case 'gridDelete': {
-        gridParams.grids = gridParams.grids.filter(g => g[2]!= content.id);
+        gridParams.grids = gridParams.grids.filter(g => g[2] != content.id);
         setGridParams(gridParams);
         scene.delete(content.id);
         scene.refresh(gridParams, { ...scope }, component3);
         scene.redraw(mode);
-       
+
         break;
       }
       case 'gridCopy': {
@@ -223,14 +244,51 @@ function App() {
         scene.refresh(gridParams, { ...scope }, component3);
         scene.recalculateSpecific(newId);
         scene.redraw(mode);
-       
+
         break;
       }
 
+      case 'sliderNew': {
+        let newId = sliders.nextId;
+        let newSlider = { id: newId, name: '', value: 0, left: -1, right: 1, stepSize: 0.01 };
+        sliders.nextId++;
+        sliders.list = [newSlider, ...sliders.list];
+        setSliders(sliders);
 
+        break;
+      }
+      case 'sliderChanged': {
+        let index = sliders.list.findIndex(slider => slider.id == content.id);
+        sliders.list[index][content.name] = content.value;
+        setSliders(sliders);
+
+        break;
+      }
+      case 'sliderChangeCommit': {
+        lastSliderChangeRev[0] = revision;
+        setLastSliderChangeRev(lastSliderChangeRev);
+        let curRev = revision;
+        
+        try {
+          scope[content.sliderName] = m.evaluate(content.sliderValue, scope);
+        } catch (err) {
+          console.log(err.name);
+          return;
+        }
+        setTimeout(() => {
+          if (lastSliderChangeRev[0] === curRev) {
+            scene.refresh(gridParams, { ...scope }, component3);
+            scene.recalculate();
+            scene.redraw(mode);
+            setRevision(rev => rev + 1);
+          }
+        }, 0);
+
+        break;
+      }
     }
 
-    setRevision(revision + 1);
+    setRevision(rev => rev + 1);
   }
 
 
@@ -238,7 +296,7 @@ function App() {
   return (
     <div className={styles.App}>
       <Graf scene={scene} mode={mode} revision={revision} />
-      <Sidebar onInput={onInput} config={{ mode, gridParams, component3, fList, scope }} />
+      <Sidebar onInput={onInput} config={{ sliders, mode, gridParams, component3, fList, scope }} />
     </div>
   );
 }
