@@ -2,11 +2,12 @@
   "name": "kompleksna",
   "version": "0.1.0",
   "private": true,
-  "homepage": "/c2/",
+  "homepage": "/complex-plane",
   "dependencies": {
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.5.0",
     "@testing-library/user-event": "^7.2.1",
+    "gh-pages": "^2.2.0",
     "mathjs": "^6.6.2",
     "plotly.js": "^1.53.0",
     "react": "^16.13.1",
@@ -16,6 +17,8 @@
     "react-scripts": "3.4.1"
   },
   "scripts": {
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build",
     "start": "react-scripts --max_old_space_size=4096 start",
     "build": "react-scripts --max_old_space_size=4096 build",
     "test": "react-scripts test",
