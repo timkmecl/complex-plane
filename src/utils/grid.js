@@ -1,19 +1,22 @@
-/*import {create, all, complex, add, subtract, multiply, exp} from 'mathjs';
-const config_mjs = { };
-const math = create(all, config_mjs);*/
 import { m } from '../utils/math';
 const {complex, add, subtract, multiply, exp} = m;
 
 export function calculateParametric(from, to, stepSize, f, fParametric) {
 	const lines = [[], []];
+	let info = {};
 
 	let diff = (to - from) > 0;
 	let dir;
-	if (diff >= 0) {
+	if (diff > 0) {
 		dir = 1;
 	} else if (diff < 0) {
 		dir = -1;
+	} else {
+		dir = 1;
+		diff = 1;
+		to = from;
 	}
+
 	if (stepSize == 0) {
 		stepSize = diff/10000;
 	}
@@ -25,25 +28,41 @@ export function calculateParametric(from, to, stepSize, f, fParametric) {
 		let y = f(x);
 		xx.push(x);
 		yy.push(y);
+
+		if (i == from) {
+			info = {
+				re: {
+					max: x.re,
+					min: x.re,
+				},
+				im: {
+					max: x.im,
+					min: x.im,
+				},
+				abs: {
+					max: m.abs(x),
+					min: m.abs(x)
+				}
+			};
+		} else {
+			const a  = m.abs(x);
+			info = {
+				re: {
+					max: x.re > info.re.max ? x.re : info.re.max,
+					min: x.re < info.re.min ? x.re : info.re.min,
+				},
+				im: {
+					max: x.im > info.im.max ? x.im : info.im.max,
+					min: x.im < info.im.min ? x.im : info.im.min,
+				},
+				abs: {
+					max: a > info.abs.max ? a : info.abs.max,
+					min: a < info.abs.min ? a : info.abs.min,
+				}
+			};
+		}
 	}
 	lines[0].push([xx, yy]);
-
-	let info = {
-		re: {
-			max: Math.max(from, to),
-			min: Math.min(from, to),
-		},
-		im: {
-			max: 0,
-			min: 0,
-		},
-		abs: {
-			max: Math.max(m.abs(from),
-				m.abs(to)),
-			min: Math.min(0, m.abs(from),
-				m.abs(to))
-		}
-	};
 
 	lines.push(info)
 	return lines;
