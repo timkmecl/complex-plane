@@ -272,4 +272,8 @@ export default class Scene {
 	delete(id) {
 		this.grids = this.grids.filter(g => g.id != id);
 	}
+
+	deleteAll() {
+		this.grids = [];
+	}
 }

@@ -258,9 +258,14 @@ input:focus {
 	margin: 0 1rem 1rem auto;
 	width: fit-content;
 	cursor: pointer;
+	text-align: center;
 }
 .newButton:hover {
 	opacity: 0.75;
+}
+
+.newButton i {
+	margin: auto auto;
 }
 
 
@@ -305,7 +310,6 @@ input:focus {
 
 
 .gridTopMenuRight {
-
 	display: grid;
 	column-gap: 1.3rem;
 	width: fit-content;
@@ -451,4 +455,39 @@ input:focus {
   background: #00a08f; 
   cursor: pointer; 
 	border-radius: 5px;
+}
+
+
+
+/* File Menu */
+
+
+.fileMenu {
+	width: 100%;
+}
+
+.fileMenuRow {
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	align-items: center;
+	justify-content: center;
+	width: 5rem;
+	column-gap: 1rem;
+	margin: 0 1rem 1rem auto;
+}
+.fileMenuRow .newButton {
+	width: 100%;
+	height: 100%;
+	margin: 0;
+}
+
+.fileMenu label {
+	cursor: pointer;
+}
+
+.fileMenu .upload {
+	opacity: 0;
+	position: absolute;
+	display:none;
+	z-index: pointer;
 }

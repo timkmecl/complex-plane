@@ -2,7 +2,7 @@
   text-align: left;
   height:100vh;
   width:100vw;
-  background: #fff;
+	background: rgb(253, 253, 253);
   overflow:hidden;
 
   display: grid;

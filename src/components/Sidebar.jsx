@@ -7,8 +7,8 @@ import TabParams from './TabParams'
 
 import styles from './Sidebar.module.css'
 
-const Sidebar = ({onInput, config}) => {
-	const [selectedTab, setSelectedTab] = useState(1);
+const Sidebar = ({onInput, config, fileControls}) => {
+	const [selectedTab, setSelectedTab] = useState(0);
 	
 	return (
 		<div className={styles.sidebar}>
@@ -33,7 +33,7 @@ const Sidebar = ({onInput, config}) => {
 				</div>
 			</div>
 			<div className={styles.content}>
-				{selectedTab===0 && <TabView onInput={onInput} mode={config.mode} component3={config.component3} />}
+				{selectedTab===0 && <TabView onInput={onInput} mode={config.mode} component3={config.component3} fileControls={fileControls} />}
 				{selectedTab===1 && <TabFunction fList={config.fList} scope={config.scope} onInput={onInput}/>}
 				{selectedTab===2 && <TabGrid onInput={onInput} gridParams={config.gridParams} />}
 				{selectedTab===3 && <TabParams onInput={onInput} sliders={config.sliders} scope={config.scope} />}

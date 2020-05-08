@@ -53,7 +53,7 @@ const newGridTemplate = [
 function App() {
   // Seznam vseh funkcij (v text obliki, dejanske funkcije shranjene v scope)
   let [fList, setFList] = useState({ list: [{ text: "f(x) = sin(x)", id: 0, name: 'f' }], idNew: 1 });
-  let [scope] = useState(scopeInit);
+  let [scope, setScope] = useState(scopeInit);
   let [sliders, setSliders] = useState({
     list: [
       { id: 0, name: 'a', value: 0, left: -1, right: 1, stepSize: 0.01 }],
@@ -105,19 +105,19 @@ function App() {
     component3: { zAxis: 're', color: 'auto' }
   });
   // Scene object (dejanske mreže, skrbi za računanje točk)
-  let [scene] = useState(
+  let [scene, setScene] = useState(
     new Scene()
   );
 
   let [mode, setMode] = useState('2d');
   let [component3, setComponent3] = useState({
     zAxis: 're', color: 'auto', hybrid: false,
-    colorscale: 'RdBu', 
+    colorscale: 'RdBu',
     base: 'f', baseIdZ: 5
   });
 
   let [revision, setRevision] = useState(0)
-  let [rev2] = useState(0)
+  let [rev2, setRev2] = useState(0)
 
 
 
@@ -127,7 +127,7 @@ function App() {
     scene.refresh(gridParams, { ...scope }, component3);
     scene.recalculate()
     scene.redraw(mode);
-    setRevision(revision + 1);
+    setRevision(revision => revision + 1);
   }, [rev2]);
 
 
@@ -268,7 +268,7 @@ function App() {
         lastSliderChangeRev[0] = revision;
         setLastSliderChangeRev(lastSliderChangeRev);
         let curRev = revision;
-        
+
         try {
           scope[content.sliderName] = m.evaluate(content.sliderValue, scope);
         } catch (err) {
@@ -291,12 +291,45 @@ function App() {
     setRevision(rev => rev + 1);
   }
 
+  function handleSave() {
+    const d = new Date();
+    const dt = d.toISOString().split('T');
+    const name = `ComplexPlane ${dt[0].substring(2)}_${dt[1].split('.')[0]}`;
+
+    const object = {
+      createdBy: 'complex-plane',
+      createdByVersion: 1,
+      fileVersion: 0,
+      fileName: name,
+      data: { fList, scope, sliders, lastSliderChangeRev, gridParams, mode, component3, revision }
+    }
+
+    return [JSON.stringify(object), name];
+  }
+
+  function handleLoad(j) {
+    console.log(j);
+    const data = j.data;
+
+    data.fList.list.forEach(f => m.evaluate(f.text, data.scope));
+    scene.deleteAll();
+
+    setScope(data.scope);
+    setFList(data.fList);
+    setSliders(data.sliders);
+    setLastSliderChangeRev(data.lastSliderChangeRev);
+    setGridParams(data.gridParams);
+    setMode(data.mode);
+    setComponent3(data.component3);
+    setRev2(r => r + 1);
+    setRevision(data.revision !== revision ? data.revision : revision + 1);
+  }
 
 
   return (
     <div className={styles.App}>
       <Graf scene={scene} mode={mode} revision={revision} />
-      <Sidebar onInput={onInput} config={{ sliders, mode, gridParams, component3, fList, scope }} />
+      <Sidebar onInput={onInput} fileControls={{ handleSave, handleLoad }} config={{ sliders, mode, gridParams, component3, fList, scope }} />
     </div>
   );
 }

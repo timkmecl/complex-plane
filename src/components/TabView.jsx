@@ -1,8 +1,9 @@
-import React, {useState} from 'react'
+import React, { useState } from 'react'
+import FileMenu from './FileMenu'
 
 import styles from './Sidebar.module.css'
 
-const TabView = ({ onInput, mode, component3 }) => {
+const TabView = ({ onInput, mode, component3, fileControls }) => {
 	let [baseIdHeight, setBaseIdHeight] = useState(component3.baseIdZ)
 
 	function change3dOptions(event) {
@@ -129,7 +130,7 @@ const TabView = ({ onInput, mode, component3 }) => {
 	}
 
 	function handleBlurHeight(e) {
-		change3dOptions({target:{name: 'baseIdZ', value: baseIdHeight}});
+		change3dOptions({ target: { name: 'baseIdZ', value: baseIdHeight } });
 	}
 
 
@@ -209,6 +210,8 @@ const TabView = ({ onInput, mode, component3 }) => {
 				</div>
 			}
 
+			<hr />
+<FileMenu handleSave={fileControls.handleSave} handleLoad={fileControls.handleLoad}  />
 		</div>
 	)
 }
